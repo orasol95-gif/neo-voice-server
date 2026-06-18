@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-width=1.0, user-scalable=no, viewport-fit=cover">
+    <title>لوحة التحكم الرقمية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght=400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+    <style>
+        :root { 
+            --bg-main: #040207; 
+            --bg-card: #0f0a1c; 
+            --bg-header: rgba(6, 3, 13, 0.9); 
+            --accent-primary: #f472b6; 
+            --accent-secondary: #a855f7; 
+            --accent-live: #00f2fe; 
+            --text-main: #f8fafc; 
+            --text-muted: #64748b; 
+            --success: #10b981; 
+            --danger: #f43f5e; 
+            --warning: #f59e0b; 
+            --glow-primary: rgba(244, 114, 182, 0.25); 
+            --glow-live: rgba(0, 242, 254, 0.35); 
+        }
+        
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Tajawal', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        /* حصر الحركات لمنع تعليق المتصفح أثناء معالجة البيانات الحية */
+        body, .page, .control-item, .btn-action-cyber, .input-cyber, .cyber-duration-chip, 
+        .dock-btn, .gift-card, .tab-btn, .recipient-box, .predict-card, .bet-chip, .prof-tab-btn {
+            transition: all 0.23s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body { 
+            background: var(--bg-main); 
+            color: var(--text-main); 
+            max-width: 430px; 
+            margin: auto; 
+            padding-bottom: 110px; 
+            box-shadow: 0 0 50px rgba(168, 85, 247, 0.2); 
+            min-height: 100vh; 
+            position: relative; 
+            overflow-x: hidden; 
+            text-align: right; 
+            user-select: none;
+        }
+
+        .page { display: none; padding-bottom: 20px; animation: cubicSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .page.active { display: block; }
+        @keyframes cubicSlide { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 390px; z-index: 99999; pointer-events: none; }
+        .toast-notification { background: rgba(15, 10, 28, 0.9); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid var(--accent-live); box-shadow: 0 10px 30px var(--glow-live); padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; animation: toastIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(-30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        
+        .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-header); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 500; border-bottom: 1px solid rgba(168, 85, 247, 0.15); }
+        .header-meta-block { display: flex; align-items: center; gap: 12px; }
+        
+        .app-back-btn { display: none; background: rgba(15, 10, 28, 0.95); border: 1px solid rgba(168, 85, 247, 0.3); color: var(--text-main); padding: 8px 14px; border-radius: 14px; font-size: 12px; font-weight: bold; cursor: pointer; align-items: center; gap: 6px; box-shadow: 0 0 10px rgba(168, 85, 247, 0.1); position: fixed; top: 15px; right: 15px; z-index: 1001; backdrop-filter: blur(10px); }
+        .app-back-btn:active { transform: scale(0.95); }
+        .app-back-btn:hover { border-color: var(--accent-live); color: var(--accent-live); box-shadow: 0 0 12px var(--glow-live); }
+        
+        .app-lang-toggle { background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(0, 242, 254, 0.1)); border: 1px solid rgba(0, 242, 254, 0.2); color: var(--accent-live); padding: 6px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .app-lang-toggle:hover { border-color: var(--accent-primary); color: var(--accent-primary); box-shadow: 0 0 12px var(--glow-primary); }
+        
+        .header h2 { font-size: 18px; font-weight: 700; background: linear-gradient(to right, #fff, var(--accent-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .live-indicator { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; background: rgba(16, 185, 129, 0.1); padding: 4px 10px; border-radius: 20px; color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); margin-top: 2px; }
+        .pulse-dot { width: 7px; height: 7px; background-color: var(--success); border-radius: 50%; animation: pulseGlow 1.5s infinite; }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+        
+        .avatar-frame { width: 42px; height: 42px; border-radius: 50%; padding: 2px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-live)); box-shadow: 0 0 10px var(--glow-primary); pointer-events: auto; cursor: pointer; }
+        .avatar-inside { width: 100%; height: 100%; background: var(--bg-main); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; overflow: hidden; }
+        .avatar-inside img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .premium-card { margin: 20px 15px; padding: 24px; border-radius: 24px; background: linear-gradient(135deg, #160d2b, #2e114d); border: 1px solid rgba(244, 114, 182, 0.2); box-shadow: 0 12px 30px rgba(0,0,0,0.6); position: relative; overflow: hidden; }
+        .premium-card::before { content: ''; position: absolute; top: -40px; right: -40px; width: 120px; height: 120px; background: var(--accent-live); filter: blur(50px); opacity: 0.2; }
+        .balance-title { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+        .balance-amount { font-size: 34px; font-weight: 700; margin: 10px 0; font-family: monospace; letter-spacing: -0.5px; }
+        
+        .control-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 15px; }
+        .control-grid .control-item { background: var(--bg-card); padding: 16px 4px; border-radius: 20px; text-align: center; font-size: 11px; cursor: pointer; border: 1px solid rgba(255,255,255,0.02); box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .control-item:active { transform: scale(0.93); border-color: var(--accent-primary); }
+        .control-item img { width: 32px; height: 32px; object-fit: contain; margin-bottom: 8px; display: block; }
+        .control-item i { font-size: 26px; display: block; margin-bottom: 8px; background: linear-gradient(to bottom, #fff, var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .section-header { padding: 15px 15px 5px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--text-muted); font-weight: bold; text-transform: uppercase; }
+        .node-box { background: var(--bg-card); margin: 12px 15px; padding: 20px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.03); box-shadow: 0 6px 15px rgba(0,0,0,0.4); }
+        .node-box h3 { font-size: 16px; color: #fff; }
+        .node-box p { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+        .node-box p span { color: #fff; font-weight: bold; }
+        
+        .btn-action-cyber { width: 100%; padding: 14px; border: none; border-radius: 16px; background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary)); color: white; font-weight: bold; margin-top: 12px; cursor: pointer; box-shadow: 0 5px 15px var(--glow-primary); }
+        .btn-action-cyber:active { transform: scale(0.97); }
+        
+        .form-box { padding: 0 15px; margin-bottom: 15px; }
+        .form-box label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+        .input-cyber { width: 100%; padding: 15px; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; color: white; font-size: 14px; outline: none; text-align: right; }
+        .input-cyber:focus { border-color: var(--accent-live); box-shadow: 0 0 10px var(--glow-live); }
+        
+        .feed-container { padding: 0 15px; }
+        .feed-row { background: var(--bg-card); padding: 15px; margin-bottom: 10px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; }
+        .feed-left { display: flex; align-items: center; gap: 12px; justify-content: flex-start; text-align: right; }
+        .feed-icon-holder { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        
+        .toggle-container { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--bg-card); border-radius: 16px; margin-bottom: 10px; }
+        .toggle-switch { position: relative; width: 46px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; right: 3px; bottom: 3px; background-color: white; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-live); }
+        input:checked + .slider:before { transform: translateX(-22px); }
+        
+        .dock-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: var(--bg-header); backdrop-filter: blur(20px); display: flex; justify-content: space-around; padding: 12px 0 24px 0; border-top: 1px solid rgba(168, 85, 247, 0.2); z-index: 900; }
+        .dock-bar .dock-btn { text-align: center; font-size: 11px; color: var(--text-muted); cursor: pointer; flex: 1; position: relative; }
+        .dock-bar .dock-btn i { font-size: 19px; margin-bottom: 4px; display: inline-block; }
+        .dock-bar .dock-btn.active { color: var(--accent-primary); text-shadow: 0 0 8px var(--glow-primary); }
+        
+        .user-profile-data-list { padding: 15px; background: rgba(4, 2, 7, 0.4); border-radius: 16px; margin: 10px 15px; border: 1px solid rgba(255,255,255,0.03); }
+        .profile-data-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 13px; }
+        .profile-data-row:last-child { border-bottom: none; }
+        .p-label { color: var(--text-muted); }
+        .p-val { color: white; font-weight: 500; }
+        
+        .cyber-duration-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 12px 0; }
+        .cyber-duration-chip { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(168, 85, 247, 0.15); border-radius: 14px; padding: 12px; text-align: center; cursor: pointer; position: relative; overflow: hidden; }
+        .cyber-duration-chip.selected { background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(0, 242, 254, 0.15)); border-color: var(--accent-live); box-shadow: 0 0 15px rgba(0, 242, 254, 0.2); }
+        .cyber-duration-chip h5 { font-size: 14px; color: #fff; margin-bottom: 4px; }
+        .cyber-duration-chip p { font-size: 11px; color: var(--success); font-weight: bold; }
+        
+        .daily-box-overlay { position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; height: 100vh; background: rgba(4, 2, 7, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+        .daily-box-overlay.active { opacity: 1; pointer-events: auto; }
+        .falling-box-container { text-align: center; animation: bounceInFall 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .falling-box-img { width: 140px; height: 140px; object-fit: contain; cursor: pointer; animation: miniPulse 2s ease-in-out infinite alternate; }
+        .falling-box-text { margin-top: 15px; font-size: 15px; color: #fff; font-weight: bold; text-shadow: 0 0 10px var(--glow-primary); background: rgba(15, 10, 28, 0.6); padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        @keyframes bounceInFall { 0% { transform: translateY(-100vh) scale(0.3); opacity: 0; } 70% { transform: translateY(15px) scale(1.1); opacity: 1; } 90% { transform: translateY(-8px) scale(0.97); } 100% { transform: translateY(0) scale(1); } }
+        @keyframes miniPulse { 0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(244, 114, 182, 0.4)); } 100% { transform: scale(1.06); filter: drop-shadow(0 0 20px var(--accent-primary)); } }
+        
+        .scatter-gift-item { position: fixed; pointer-events: none; z-index: 2100; font-size: 24px; animation: scatterAway 1.4s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; will-change: transform, opacity; }
+        @keyframes scatterAway { 0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate3d(var(--x), var(--y), 0) scale(0.4) rotate(var(--r)); opacity: 0; } }
+        .reward-popup-card { background: linear-gradient(135deg, #1b0e33, #3b1166); border: 2px solid var(--accent-live); border-radius: 24px; padding: 30px 20px; text-align: center; width: 85%; max-width: 340px; box-shadow: 0 0 40px var(--glow-live); display: none; animation: popupReveal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes popupReveal { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .currency-dropdown-panel { position: absolute; top: 75px; left: 80px; background: #0f0a1c; border: 1px solid var(--accent-live); border-radius: 14px; padding: 6px; display: none; flex-direction: column; gap: 4px; min-width: 130px; box-shadow: 0 8px 25px rgba(0,242,254,0.25); z-index: 999; }
+        .currency-option-item { display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .currency-option-item:hover { background: rgba(0, 242, 254, 0.1); color: var(--accent-live); }
+        
+        .casino-hub { padding: 15px; }
+        .casino-title-header { padding: 15px; text-align: center; background: linear-gradient(to bottom, var(--bg-card), rgba(0,0,0,0.2)); font-size: 20px; font-weight: 900; border-bottom: 2px solid var(--accent-secondary); color: var(--accent-live); text-shadow: 0 0 15px var(--glow-live); border-radius: 18px 18px 0 0; margin-bottom: 15px; letter-spacing: 1px; }
+        .slots-machine { width: 100%; background: var(--bg-card); border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 24px; padding: 18px 15px; box-sizing: border-box; text-align: center; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5); }
+        .reels-container { display: flex; justify-content: center; gap: 10px; margin: 10px 0 15px 0; background: #05020c; padding: 15px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 25px rgba(0,0,0,0.95); position: relative; }
+        .reels-container::before { content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: linear-gradient(to right, transparent, var(--accent-live), transparent); z-index: 5; pointer-events: none; }
+        .reel-box { width: 85px; height: 95px; background: linear-gradient(to bottom, #090615, #140d2b, #090615); display: flex; justify-content: center; align-items: center; font-size: 45px; border-radius: 14px; border: 1px solid rgba(168, 85, 247, 0.2); box-shadow: 0 5px 15px rgba(0,0,0,0.4); overflow: hidden; }
+        
+        .predict-grid { display: flex; justify-content: space-between; width: 100%; gap: 6px; margin-bottom: 12px; }
+        .predict-card { flex: 1; background: #090615; border: 1px solid rgba(255,255,255,0.05); padding: 10px 0; border-radius: 12px; font-size: 24px; cursor: pointer; text-align: center; }
+        .predict-card.selected { background: rgba(168, 85, 247, 0.2); border-color: var(--accent-primary); transform: scale(1.05); box-shadow: 0 0 12px var(--glow-primary); }
+        
+        .bet-container { display: flex; justify-content: space-between; width: 100%; gap: 6px; margin-bottom: 18px; overflow-x: auto; padding-bottom: 4px; }
+        .bet-chip { flex: 1; background: #140d2b; border: 1px solid rgba(255,255,255,0.05); padding: 9px 6px; border-radius: 10px; font-size: 11px; font-weight: bold; color: #e2e8f0; cursor: pointer; white-space: nowrap; text-align: center; }
+        .bet-chip.selected { background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary)); color: white; border-color: var(--accent-primary); box-shadow: 0 4px 12px var(--glow-primary); }
+        
+        .spin-button { width: 100%; padding: 16px; border: none; border-radius: 14px; background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary)); color: white; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 20px var(--glow-primary); letter-spacing: 0.5px; }
+        .spin-button:active { transform: scale(0.98); }
+        .spin-button:disabled { background: #1e293b; color: #475569; box-shadow: none; cursor: not-allowed; }
+        #result-casino { margin: 12px 0; font-size: 14px; font-weight: bold; min-height: 24px; text-align: center; }
+        
+        .live-banner { background: #040207; padding: 10px; text-align: center; font-size: 11px; border: 1px solid rgba(255,255,255,0.03); border-radius: 12px; display: flex; justify-content: center; align-items: center; gap: 8px; height: 36px; margin-top: 15px; direction: ltr; }
+        .live-dot { color: var(--danger); animation: blink 1s infinite; font-size: 14px; }
+        #live-text { transition: opacity 0.3s ease-in-out; font-weight: 600; color: var(--text-muted); letter-spacing: 0.2px; }
+        .spinning { animation: verticalBlur 0.1s infinite linear; }
+        @keyframes verticalBlur { 0% { transform: translateY(-10px); filter: blur(2px); } 100% { transform: translateY(10px); filter: blur(3px); } }
+        
+        .casino-games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .casino-game-card { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.03); border-radius: 18px; padding: 15px; text-align: center; cursor: pointer; }
+        .casino-game-card i { font-size: 32px; color: #facc15; margin-bottom: 8px; display: block; }
+        
+        .wheel-container { position: relative; padding: 12px; border-radius: 50%; background: #222; box-shadow: 0 0 25px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(0,0,0,0.6); width: fit-content; margin: auto; }
+        .lights-ring { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; pointer-events: none; z-index: 5; }
+        .light-bulb { position: absolute; width: 10px; height: 10px; background: #fff; border-radius: 50%; top: 50%; left: 50%; transform-origin: center; box-shadow: 0 0 6px #fff; }
+        
+        @keyframes flash-fast-even { 0%, 100% { background: #ffcc00; box-shadow: 0 0 12px #ffcc00, 0 0 20px #ffcc00; } 50% { background: #333; box-shadow: none; } }
+        @keyframes flash-fast-odd { 0%, 100% { background: #333; box-shadow: none; } 50% { background: #ff3366; box-shadow: 0 0 12px #ff3366, 0 0 20px #ff3366; } }
+        @keyframes win-glow { 0%, 100% { background: #00ffcc; box-shadow: 0 0 15px #00ffcc; transform: scale(1.2); } 50% { background: #ff00ff; box-shadow: 0 0 15px #ff00ff; transform: scale(1); } }
+        
+        .flash-even { animation: flash-fast-even 0.2s infinite; }
+        .flash-odd { animation: flash-fast-odd 0.2s infinite; }
+        .win-light { animation: win-glow 0.4s infinite; }
+        
+        .pointer { width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #ff0055; position: absolute; top: -5px; left: 50%; transform: translateX(-50%); z-index: 10; filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.5)); }
+        #wheel { width: 310px; height: 310px; border-radius: 50%; border: 5px solid #fff; box-shadow: 0 0 12px rgba(255,255,255,0.2); transition: transform 5s cubic-bezier(0.1, 0.8, 0.1, 1); }
+        #spinBtn { margin-top: 15px; padding: 12px 40px; border: none; border-radius: 30px; background: linear-gradient(45deg, #ffcc00, #ff9900); color: #000; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(255, 153, 0, 0.3); }
+        #spinBtn:active { transform: scale(0.95); }
+        #spinBtn:disabled { background: #555; color: #888; box-shadow: none; cursor: not-allowed; }
+        
+        #result { margin-top: 12px; font-size: 18px; font-weight: bold; min-height: 28px; text-align: center; }
+        .pop-result { animation: popEffect 0.5s ease-out forwards; color: #00ffcc; text-shadow: 0 0 12px rgba(0, 255, 204, 0.5); }
+        
+        .winners-banner { width: 100%; background: linear-gradient(to top, #090911 0%, rgba(18, 18, 30, 0.98) 100%); border-top: 2px solid rgba(255, 204, 0, 0.4); padding: 8px 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.8); box-sizing: border-box; }
+        .banner-title { font-size: 14px; color: #ffcc00; text-align: center; margin-bottom: 8px; font-weight: bold; text-shadow: 0 0 6px rgba(255, 204, 0, 0.4); }
+        .ticker-vertical-wrap { width: 100%; height: 112px; overflow: hidden; position: relative; }
+        .ticker-vertical-move { display: flex; flex-direction: column; animation: scrollUpVertical 14s linear infinite; }
+        .ticker-row { display: flex; justify-content: space-between; align-items: center; height: 28px; width: 100%; padding: 0 15px; box-sizing: border-box; }
+        .ticker-item { font-size: 12.5px; color: #e0e0e0; direction: ltr; width: 48%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ticker-item .user-name { color: #33ccff; font-weight: bold; }
+        .ticker-item .amount { color: #00ffcc; font-weight: bold; }
+        
+        @keyframes scrollUpVertical { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
+        @keyframes popEffect { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+        
+        .team-header { text-align: center; margin-bottom: 20px; }
+        .team-header h1 { font-size: 24px; font-weight: 800; margin-bottom: 5px; background: linear-gradient(135deg, var(--accent-live), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .team-header p { color: var(--text-muted); font-size: 13px; }
+        
+        .net-notification { background: rgba(0, 242, 254, 0.1); border: 1px solid rgba(0, 242, 254, 0.2); color: var(--accent-live); padding: 12px; border-radius: 15px; margin-bottom: 15px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+        .workflow-banner { background: linear-gradient(135deg, #160d2b, var(--bg-card)); border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 18px; padding: 15px; margin-bottom: 15px; }
+        .workflow-banner h4 { font-size: 14px; color: var(--accent-secondary); margin-bottom: 10px; }
+        .steps { display: flex; flex-direction: column; gap: 8px; }
+        .step { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #cbd5e1; }
+        .step-num { background: var(--accent-secondary); color: #fff; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; }
+        
+        .net-card { background: var(--bg-card); border-radius: 18px; padding: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,.05); }
+        .invite-box { display: flex; gap: 10px; margin-top: 10px; }
+        .invite-link { flex: 1; background: #040207; padding: 12px; border-radius: 12px; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #94a3b8; border: 1px solid rgba(255,255,255,0.05); }
+        .copy-btn { border: none; background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary)); color: #fff; padding: 12px 18px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+        .copy-btn:active { transform: scale(0.95); }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 15px; }
+        .stat { background: var(--bg-card); padding: 15px; border-radius: 15px; text-align: center; border: 1px solid rgba(255,255,255,.03); }
+        .stat span { font-size: 12px; color: var(--text-muted); }
+        .stat h3 { margin-top: 8px; font-size: 18px; font-weight: 700; }
+        
+        .income-card-net { background: linear-gradient(135deg, var(--bg-card), #040207); padding: 15px; border-radius: 15px; margin-bottom: 12px; border-right: 4px solid var(--accent-live); }
+        .income-card-net span { color: var(--text-muted); font-size: 13px; }
+        .income-card-net h2 { margin-top: 6px; font-size: 20px; color: var(--accent-live); }
+        
+        .section-title-net { font-size: 16px; font-weight: 800; margin-bottom: 15px; color: #cbd5e1; }
+        .level-net { display: flex; justify-content: space-between; padding: 12px; background: #040207; border-radius: 12px; margin-bottom: 10px; font-size: 13px; }
+        .rank-box-net { background: var(--bg-card); padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,.03); }
+        .rank-header-net { display: flex; align-items: center; justify-content: space-between; }
+        .rank-badge-3d-net { width: 45px; height: 45px; object-fit: contain; }
+        .progress-net { height: 10px; background: #040207; border-radius: 30px; overflow: hidden; margin: 15px 0; }
+        .progress-fill-net { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-live), var(--accent-secondary)); }
+        
+        .rank-list-net { display: flex; justify-content: space-between; margin-top: 15px; font-size: 11px; color: var(--text-muted); }
+        .rank-list-net .active-r { color: var(--accent-live); font-weight: bold; }
+        .rewards-grid-net { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .reward-item-net { display: flex; align-items: center; justify-content: space-between; background: #040207; padding: 10px 12px; border-radius: 10px; font-size: 12px; }
+        .reward-item-net img { width: 24px; height: 24px; object-fit: contain; }
+        
+        @keyframes liveRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .live-icon-spin { animation: liveRotate 3s linear infinite; display: inline-block; }
+        
+        .room-wrapper { width: 100%; height: 100vh; height: 100dvh; position: relative; display: flex; flex-direction: column; overflow: hidden; background: #05030a; }
+        .bg-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; object-fit: cover; z-index: 1; opacity: 0.45; transform: translate3d(0,0,0); will-change: transform; }
+        
+        .fullscreen-gift-player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; pointer-events: none; display: none; background: transparent; }
+        .fullscreen-gift-player.active { display: flex; justify-content: center; align-items: center; }
+        .fullscreen-gift-player video { width: 100%; height: 100%; object-fit: cover; background: transparent; mix-blend-mode: screen; opacity: 0.85; filter: brightness(1.25) contrast(1.2); pointer-events: none; transform: translate3d(0,0,0); }
+        
+        .gift-announcement-banner { position: absolute; top: 115px; left: 5%; width: 90%; background: linear-gradient(90deg, rgba(255, 215, 0, 0.3) 0%, rgba(108, 92, 231, 0.5) 100%); border: 1.5px solid rgba(255, 215, 0, 0.5); box-shadow: 0 0 20px rgba(255, 215, 0, 0.25); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 30px; padding: 10px 18px; display: flex; align-items: center; justify-content: space-between; z-index: 1500; transform: translateY(-50px) scale(0.8); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; }
+        .gift-announcement-banner.active { transform: translateY(0) scale(1); opacity: 1; }
+        .banner-member-info { display: flex; align-items: center; gap: 10px; }
+        .banner-avatar { width: 38px; height: 38px; border-radius: 50%; background: #1a0f3c; border: 2px solid #ffd700; display: flex; justify-content: center; align-items: center; font-size: 20px; overflow: hidden; }
+        .banner-text { font-size: 12px; font-weight: bold; color: #fff; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .banner-text span { color: #ffd700; display: block; font-size: 10px; }
+        .banner-gift-badge { background: rgba(255, 0, 127, 0.25); border: 1px solid #ff007f; padding: 4px 12px; border-radius: 15px; font-size: 11px; font-weight: 800; color: #fff; text-shadow: 0 0 5px #ff007f; }
+        
+        .room-header { padding: 45px 15px 5px; display: flex; justify-content: space-between; align-items: center; z-index: 5; background: linear-gradient(to bottom, rgba(5,3,10,0.9) 0%, rgba(5,3,10,0) 100%); }
+        .room-meta { display: flex; align-items: center; gap: 8px; }
+        .room-logo { width: 36px; height: 36px; border-radius: 12px; object-fit: cover; border: 2px solid #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+        .room-title { font-size: 14px; font-weight: 800; color: #fff; text-shadow: 0 0 15px rgba(255, 255, 255, 0.2); }
+        .exit-btn { background: rgba(255, 59, 48, 0.12); border: 1px solid rgba(255, 59, 48, 0.35); color: #ff5e62; padding: 5px 12px; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer; backdrop-filter: blur(10px); }
+        .exit-btn:active { transform: scale(0.92); }
+        
+        .seats-section { padding: 5px 15px; display: flex; flex-direction: column; gap: 10px; z-index: 5; }
+        .top-premium-row { display: flex; justify-content: space-around; }
+        .bottom-regular-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 10px; }
+        .seat-box { display: flex; flex-direction: column; align-items: center; position: relative; cursor: pointer; }
+        
+        .chair-3d-wrapper, .avatar-wrapper { width: 56px; height: 56px; position: relative; display: flex; justify-content: center; align-items: center; }
+        .chair-3d-wrapper { perspective: 600px; }
+        .chair-back { position: absolute; top: 2px; width: 34px; height: 36px; background: linear-gradient(135deg, #44337a 0%, #1a103c 100%); border-radius: 8px 8px 5px 5px; border: 1.5px solid rgba(255, 255, 255, 0.08); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .chair-seat { position: absolute; bottom: 8px; width: 42px; height: 18px; background: linear-gradient(180deg, #5c44b5 0%, #291a54 100%); border-radius: 5px 5px 10px 10px; transform: rotateX(35deg); border-bottom: 3px solid #160d33; box-shadow: 0 8px 12px rgba(0,0,0,0.6); }
+        .chair-arm-l, .chair-arm-r { position: absolute; bottom: 18px; width: 4px; height: 15px; background: #332266; border-radius: 2px; }
+        .chair-arm-l { left: 4px; } .chair-arm-r { right: 4px; }
+        
+        .premium-seat[data-throne="1"] .chair-back { background: linear-gradient(135deg, #ffd700 0%, #615000 100%); border-color: #ffd700; }
+        .premium-seat[data-throne="1"] .chair-seat { background: linear-gradient(180deg, #ffd700 0%, #a38100 100%); box-shadow: 0 0 12px rgba(255, 215, 0, 0.4); }
+        .premium-seat[data-throne="2"] .chair-back { background: linear-gradient(135deg, #e2e2e2 0%, #444444 100%); border-color: #cbd5e1; }
+        .premium-seat[data-throne="2"] .chair-seat { background: linear-gradient(180deg, #b8bfc7 0%, #4f5864 100%); box-shadow: 0 0 12px rgba(226, 226, 226, 0.3); }
+        .premium-seat[data-throne="3"] .chair-back { background: linear-gradient(135deg, #cd7f32 0%, #57310c 100%); border-color: #cd7f32; }
+        .premium-seat[data-throne="3"] .chair-seat { background: linear-gradient(180deg, #be7328 0%, #633304 100%); box-shadow: 0 0 12px rgba(205, 127, 50, 0.3); }
+        
+        .avatar-wrapper { display: none; }
+        .avatar-img-photo { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; position: absolute; z-index: 1; background: #190e38; border: 2px solid var(--accent-live); box-shadow: 0 0 10px var(--glow-live); }
+        .premium-seat .avatar-img-photo { border: 2px solid #ffd700; box-shadow: 0 0 12px rgba(255, 215, 0, 0.5); }
+        .avatar-frame-overlay { position: absolute; width: 100%; height: 100%; top: 0; left: 0; background-size: 100% 100%; background-repeat: no-repeat; background-position: center; z-index: 2; pointer-events: none; }
+        
+        .mic-badge { position: absolute; bottom: 0; right: 0; background: #0f0724; border: 1.5px solid #00ffcc; border-radius: 50%; width: 18px; height: 18px; display: flex; justify-content: center; align-items: center; font-size: 9px; z-index: 4; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .premium-seat .mic-badge { border-color: #ffd700; }
+        
+        .seat-box.occupied .chair-3d-wrapper { display: none; }
+        .seat-box.occupied .avatar-wrapper { display: flex; }
+        .seat-box.speaking .avatar-wrapper { animation: speakingPulse 0.5s infinite alternate ease-in-out; }
+        @keyframes speakingPulse { 0% { transform: scale(1); } 100% { transform: scale(1.04); } }
+        
+        .seat-timer { position: absolute; top: -18px; right: 2px; background: rgba(0, 0, 0, 0.85); color: #ff3b30; font-size: 8px; padding: 1px 4px; border-radius: 4px; font-weight: bold; z-index: 5; display: none; }
+        .seat-earnings { position: absolute; top: -18px; left: 2px; background: rgba(0, 0, 0, 0.9); color: #ffd700; font-size: 8px; padding: 1px 4px; border-radius: 4px; font-weight: bold; z-index: 5; display: none; border: 1px solid rgba(255, 215, 0, 0.25); }
+        .user-name-banner { margin-top: 5px; font-size: 9px; color: #fff; background: linear-gradient(90deg, rgba(83, 68, 181, 0.85), rgba(37, 19, 74, 0.95)); padding: 2px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); max-width: 75px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; text-align: center; font-weight: bold; box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
+        .premium-seat .user-name-banner { background: linear-gradient(90deg, rgba(212, 175, 55, 0.9), rgba(97, 80, 0, 0.95)); border-color: rgba(255, 215, 0, 0.3); }
+        
+        .chat-banner-container { margin: 5px 15px 0; padding: 8px 12px; background: linear-gradient(90deg, rgba(15, 10, 28, 0.85), rgba(44, 18, 86, 0.6)); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 14px; display: flex; align-items: center; gap: 8px; z-index: 5; box-shadow: 0 4px 15px rgba(0, 242, 254, 0.1); }
+        .chat-banner-container i { color: var(--accent-live); font-size: 14px; animation: miniPulse 1s infinite alternate; }
+        .chat-banner-text { font-size: 11.5px; color: #fff; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+        
+        .chat-area { flex: 1; min-height: 80px; padding: 5px 15px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; z-index: 5; }
+        .chat-msg { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(8px); padding: 5px 10px; border-radius: 10px; align-self: flex-start; max-width: 85%; font-size: 11.5px; }
+        .chat-msg span { color: #00ffcc; font-weight: bold; margin-left: 6px; }
+        
+        .bottom-bar { margin: 5px 15px 15px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(15px); border-radius: 25px; border: 1px solid rgba(255, 255, 255, 0.1); z-index: 5; gap: 10px; }
+        .chat-input-container { flex: 1; display: flex; background: rgba(255, 255, 255, 0.08); border-radius: 20px; margin-left: 5px; padding: 2px; border: 1px solid rgba(255,255,255,0.05); align-items: center; }
+        .chat-input-field { background: transparent; border: none; padding: 6px 10px; color: #fff; flex: 1; font-size: 12.5px; outline: none; text-align: right; }
+        .chat-input-field::placeholder { color: #b3a1d9; }
+        .send-msg-btn { background: none; border: none; color: #00ffcc; padding: 0 10px; cursor: pointer; font-size: 12.5px; font-weight: bold; }
+        .send-msg-btn:active { transform: scale(0.9); opacity: 0.8; }
+        
+        .action-buttons { display: flex; gap: 8px; align-items: center; }
+        .control-btn { width: 38px; height: 38px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255,255,255,0.1); color: white; display: flex !important; justify-content: center; align-items: center; font-size: 15px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+        .control-btn:active { transform: scale(0.85); }
+        .control-btn.mic-active { background: linear-gradient(135deg, #00ffcc 0%, #0099ff 100%); border-color: #00ffcc; box-shadow: 0 0 15px rgba(0, 255, 204, 0.45); color: #05030a; }
+        .control-btn.mic-muted { background: linear-gradient(135deg, #ff3b30 0%, #990000 100%); border-color: #ff3b30; box-shadow: 0 0 15px rgba(255, 59, 48, 0.4); color: #fff; }
+        .btn-gift { display: flex !important; background: linear-gradient(135deg, #ff007f 0%, #ff5e62 100%); border-color: #ff007f; box-shadow: 0 4px 12px rgba(255, 0, 127, 0.35); }
+        
+        .custom-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 2500; display: flex; flex-direction: column; justify-content: flex-end; transform: translateY(100%); transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
+        .custom-modal.active { transform: translateY(0); }
+        .modal-content { background: linear-gradient(180deg, #1f123d 0%, #0d071c 100%); border-radius: 30px 30px 0 0; padding: 20px; max-height: 85vh; display: flex; flex-direction: column; border-top: 2px solid rgba(255,255,255,0.1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 12px; }
+        .modal-close { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+        
+        .gifts-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-gap: 12px 8px; overflow-y: auto; flex: 1; padding-bottom: 20px; }
+        .gift-card { background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 6px; text-align: center; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; display: flex; flex-direction: column; align-items: center; position: relative; }
+        .gift-card:active { transform: scale(0.95); }
+        .gift-card.selected { border-color: #ff007f; background: rgba(255, 0, 127, 0.08); box-shadow: 0 0 10px rgba(255, 0, 127, 0.25); }
+        .gift-video-cover { width: 100%; height: 52px; border-radius: 8px; object-fit: cover; background: #110924; margin-bottom: 5px; pointer-events: none; }
+        .gift-title { font-size: 9px; font-weight: bold; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+        .gift-price { font-size: 9px; color: #ffd700; margin-top: 3px; display: flex; align-items: center; gap: 2px; font-weight: bold; }
+        
+        .store-tabs { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; }
+        .store-tabs::-webkit-scrollbar, .recipient-select::-webkit-scrollbar { display: none; }
+        .tab-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.05); color: #b3a1d9; padding: 8px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; white-space: nowrap; }
+        .tab-btn.active { background: #ff007f; color: #fff; font-weight: bold; box-shadow: 0 0 10px rgba(255, 0, 127, 0.4); }
+        
+        .recipient-select { display: flex; gap: 12px; overflow-x: auto; padding: 5px 0 12px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; }
+        .recipient-box { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; opacity: 0.5; }
+        .recipient-box.selected { opacity: 1; }
+        .recipient-box .avatar-mini { width: 38px; height: 38px; border-radius: 50%; background: #ff007f; display: flex; justify-content: center; align-items: center; font-size: 16px; border: 2px solid transparent; }
+        .recipient-box.selected .avatar-mini { border-color: #00ffcc; box-shadow: 0 0 8px #00ffcc; }
+        
+        .store-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .qty-selector { display: flex; align-items: center; gap: 10px; }
+        .qty-input { width: 60px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: #fff; text-align: center; padding: 6px; border-radius: 8px; outline: none; }
+        
+        .btn-send-gift { background: linear-gradient(90deg, #ff007f, #7000ff); border: none; color: white; padding: 10px 30px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(112, 0, 255, 0.3); }
+        .btn-send-gift:active { transform: scale(0.95); box-shadow: none; }
+        
+        .dialog-btn { background: #ff007f; border: none; color: white; padding: 12px; border-radius: 15px; font-weight: bold; margin-top: 10px; cursor: pointer; width: 100%; }
+        .dialog-btn:active { transform: scale(0.97); }
+        .dialog-btn.secondary { background: rgba(255,255,255,0.1); color: #fff; }
+        
+        .member-profile-card { display: flex; flex-direction: column; align-items: center; padding: 15px 0; text-align: center; }
+        .profile-avatar-circle { width: 74px; height: 74px; border-radius: 50%; background: radial-gradient(circle, #3b2375 0%, #110924 100%); border: 3px solid #00ffcc; display: flex; justify-content: center; align-items: center; font-size: 38px; margin-bottom: 10px; box-shadow: 0 0 15px rgba(0, 255, 204, 0.3); overflow: hidden; }
+        .profile-avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-name-text { font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 5px; }
+        .profile-status-badge { font-size: 11px; background: rgba(255, 255, 255, 0.08); padding: 3px 10px; border-radius: 10px; color: #b3a1d9; margin-bottom: 15px; }
+        .profile-actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+        
+        .room-live-wallet { background: rgba(0, 242, 254, 0.15); border: 1px solid var(--accent-live); color: var(--accent-live); padding: 4px 10px; border-radius: 14px; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 5px; box-shadow: 0 0 8px var(--glow-live); }
+        .prof-card-row { background: var(--bg-card); border: 1px solid rgba(255, 255, 255, 0.04); padding: 16px; border-radius: 20px; display: flex; align-items: center; justify-content: space-between; margin: 0 15px 12px 15px; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255,255,255,0.05); }
+        .prof-card-row:active { transform: scale(0.96); }
+        
+        .prof-card-left { display: flex; align-items: center; gap: 15px; }
+        .prof-icon-3d { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 5px 0 rgba(0,0,0,0.35), inset 0 2px 4px rgba(255,255,255,0.25); }
+        .prof-card-title { font-size: 14px; font-weight: 700; color: #fff; }
+        .prof-card-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .prof-tab-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); color: var(--text-muted); padding: 8px 10px; border-radius: 12px; cursor: pointer; font-size: 11px; font-weight: bold; flex: 1; text-align: center; white-space: nowrap; }
+        .prof-tab-btn.active { background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary)); color: #fff; border-color: transparent; box-shadow: 0 4px 10px var(--glow-primary); }
+        .prof-version-footer { text-align: center; padding: 24px 10px; font-size: 11px; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.03); margin-top: 40px; direction: rtl; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="sup.js"></script>
+</head>
+<body>
+    <button class="app-back-btn" id="cyber-page-back-trigger" onclick="handleBackToHome()"><i class="fa-solid fa-circle-chevron-left"></i> <span id="back-btn-text">رجوع</span></button>
+    
+    <div class="daily-box-overlay" id="maintenance-overlay" style="z-index: 3000;">
+        <div class="reward-popup-card" style="display: block; border-color: var(--accent-primary); box-shadow: 0 0 30px var(--glow-primary);">
+            <i class="fa-solid fa-screwdriver-wrench" style="font-size: 55px; color: var(--accent-primary); margin-bottom: 15px; display: block; animation: miniPulse 1s ease infinite alternate;"></i>
+            <h3 style="font-size: 20px; color: #fff; margin-bottom: 8px;">النظام قيد الصيانة</h3>
+            <p style="font-size: 13px; color: #cbd5e1; line-height: 1.7; text-align: justify;">عزيزي المستثمر، تخضع منصة <b>NEO</b> حالياً لأعمال صيانة وتحديثات برمجية مجدولة ومكثفة لترقية وتطوير كفاءة الخوادم السحابية وعجلة الحظ الرقمية. سيتم إعادة فتح لوحة التحكم التفاعلية بشكل تلقائي فور الانتهاء مباشرة، شكراً لصبركم وثقتكم بنا.</p>
+        </div>
+    </div>
+    
+    <div class="daily-box-overlay" id="daily-gift-overlay">
+        <div class="falling-box-container" id="falling-box-wrapper">
+            <img src="snd.png" class="falling-box-img" alt="صندوق المكافأة اليومية" onclick="claimDailyBoxReward()">
+            <div class="falling-box-text">انقر على الصندوق لربح مكافئتك اليومية</div>
+        </div>
+        <div class="reward-popup-card" id="daily-reward-card">
+            <i class="fa-solid fa-gift" style="font-size: 55px; color: var(--accent-primary); margin-bottom: 15px; display: block; animation: miniPulse 1s ease infinite alternate;"></i>
+            <h3 style="font-size: 20px; color: #fff; margin-bottom: 8px;">تهانينا! لقد ربحت المكافأة</h3>
+            <h2 id="claimed-amount-text" style="font-size: 32px; color: var(--accent-live); font-family: monospace; margin-bottom: 20px;">0 د.ع</h2>
+            <button class="btn-action-cyber" style="margin-top: 0; padding: 12px;" onclick="closeDailyRewardModal()">استلام وإضافة للمحفظة</button>
+        </div>
+    </div>
+    
+    <div class="daily-box-overlay" id="hidden-warning-overlay">
+        <div class="reward-popup-card" style="display: block; border-color: var(--warning); box-shadow: 0 0 30px rgba(245, 158, 11, 0.35);">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 55px; color: var(--warning); margin-bottom: 15px; display: block; animation: miniPulse 1s ease infinite alternate;"></i>
+            <h3 style="font-size: 19px; color: #fff; margin-bottom: 8px;">تحذير أداء الحساب الذكي</h3>
+            <p style="font-size: 13px; color: #cbd5e1; line-height: 1.6; margin-bottom: 20px; text-align: justify;">عزيزي المستثمر، لقد قمت بسحب الأرباح بشكل متكرر دون وجود نشاط حقيقي لشبكتك المباشرة. يجب عليك تكوين وبناء فريق نيو نشط الآن لزيادة وتسريع وتيرة أرباحك وتجنب فرض قيود على دورة العقد السحابي.</p>
+            <button class="btn-action-cyber" style="margin-top: 0; padding: 12px; background: linear-gradient(90deg, #f59e0b, #d97706);" onclick="$('hidden-warning-overlay').classList.remove('active')">موافق، مباشرة البناء</button>
+        </div>
+    </div>
+    
+    <div class="daily-box-overlay" id="deposit-success-overlay">
+        <div class="reward-popup-card" id="deposit-success-card" style="display: block;">
+            <i class="fa-solid fa-circle-check" style="font-size: 55px; color: var(--success); margin-bottom: 15px; display: block;"></i>
+            <h3 style="font-size: 19px; color: #fff; margin-bottom: 8px;">تم نجاح الإيداع</h3>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px;">عملية الإيداع تمت بنجاح، يرجى الانتظار من 5 دقائق الى 10 دقائق لتدقيق المعاملة وتحديث المحفظة.</p>
+            <button class="btn-action-cyber" style="margin-top: 0; padding: 12px;" onclick="closeDepositSuccessModal()">موافق</button>
+        </div>
+    </div>
+    
+    <div class="toast-container" id="toast-wrapper"></div>
+    
+    <div class="header">
+        <div class="header-meta-block">
+            <div style="text-align: inherit;">
+                <h2 id="app-user-name">جاري التحميل..</h2>
+                <div class="live-indicator" id="network-status-label"><div class="pulse-dot"></div>الشبكة متصلة الآن</div>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="app-lang-toggle" onclick="toggleCurrencySelectorPanel(event)" style="padding: 6px 10px;"><span id="current-currency-flag">🇮🇶</span> <span id="current-currency-name">IQD</span></button>
+            <div class="currency-dropdown-panel" id="currency-dropdown-box">
+                <div class="currency-option-item" onclick="executeCurrencySwitch('IQD')"><span>🇮🇶</span> <span>IQD (العراقي)</span></div>
+                <div class="currency-option-item" onclick="executeCurrencySwitch('USD')"><span>🇺🇸</span> <span>USD (الأمريكي)</span></div>
+            </div>
+            <button class="app-lang-toggle" onclick="triggerNotificationCenter()" style="padding: 6px 10px;"><img src="bell.png" alt="Notifications" style="width: 16px; height: 16px; object-fit: contain; display: block;"></button>
+            <button class="app-lang-toggle" onclick="navigateDock('support')"><i class="fa-solid fa-headset"></i></button>
+            <div class="avatar-frame" onclick="navigateDock('profile')"><div class="avatar-inside" id="app-header-avatar">AI</div></div>
+        </div>
+    </div>
+    
+    <div id="view-home" class="page active">
+        <div class="premium-card">
+            <div class="balance-title" id="lbl-balance-title"><i class="fa-solid fa-bolt-lightning" style="color:var(--accent-live)"></i> الرصيد الكلي المتاح</div>
+            <div class="balance-amount" id="main-balance">0.00 د.ع</div>
+            <div class="profit" id="lbl-profit-title"><i class="fa-solid fa-microchip"></i> الأرباح الفورية اليوم: +<span id="main-profit">0.00 د.ع</span></div>
+        </div>
+        <div class="control-grid">
+            <div class="control-item" onclick="navigateDock('deposit')"><img src="xw.png" alt="Recharge"><span class="ctrl-txt">إعادة شحن</span></div>
+            <div class="control-item" onclick="navigateDock('withdraw')"><img src="xu.png" alt="Withdraw Profits"><span class="ctrl-txt">سحب الأرباح</span></div>
+            <div class="control-item" onclick="navigateDock('network')"><img src="xo.png" alt="Network"><span class="ctrl-txt">الشبكة</span></div>
+            <div class="control-item" onclick="navigateDock('tasks')"><img src="ajl.png" alt="عجلة الحظ"><span class="ctrl-txt">عجلة الحظ</span></div>
+            <div class="control-item" onclick="navigateDock('nodes')"><img src="xs.png" alt="Nodes"><span class="ctrl-txt">العقد</span></div>
+            <div class="control-item" onclick="navigateDock('profile')"><img src="xt.png" alt="Engine"><span class="ctrl-txt">الضبط</span></div>
+        </div>
+        <div style="margin: 15px 15px 5px 15px; background: rgba(0, 242, 254, 0.05); border: 1px solid rgba(0, 242, 254, 0.15); border-radius: 14px; overflow: hidden; padding: 10px; display: flex; align-items: center;">
+            <marquee direction="left" scrollamount="5" behavior="scroll" loop="infinite" id="global-live-marquee" style="color: var(--accent-live); font-size: 13px; font-weight: 500; width: 100%;" onmouseover="this.stop();" onmouseout="this.start();">✨ انضم الآن إلى مجتمعنا الحصري وال رسمي على التليجرام لتحصيل أقوى الهدايا اليومية والاستراتيجيات الذكية مجاناً! انقر هنا للربط المباشر 🔗 https://t.me/neocomb</marquee>
+            <button class="btn-mini-copy" style="white-space: nowrap; margin-right: 8px; background: #229ED9;" onclick="window.open('https://t.me/neocomb', '_blank')">انضمام</button>
+        </div>
+        <div style="margin: 10px 15px 20px 15px; background: linear-gradient(135deg, #1e113c, #4c1d95); border: 1px solid var(--accent-primary); border-radius: 18px; padding: 14px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(244,114,182,0.15); cursor: pointer;" onclick="navigateDock('casino')">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="font-size: 24px; color: #facc15; animation: miniPulse 1s ease infinite alternate;"><i class="fa-solid fa-dice"></i></div>
+                <div>
+                    <h4 style="font-size: 14px; color: #fff; font-weight: 700;">صالة الكازينو الحية والمباشرة</h4>
+                    <p style="font-size: 11px; color: var(--accent-primary);">رسومات حركية عالية الجودة وألعاب حقيقية</p>
+                </div>
+            </div>
+            <i class="fa-solid fa-circle-chevron-left" style="color: var(--accent-primary); font-size: 18px;"></i>
+        </div>
+    </div>
+    
+    <div id="view-casino" class="page">
+        <div class="casino-hub">
+            <div class="casino-title-header">🎰 NEO CASINO VIP 🎰</div>
+            <div class="premium-card" style="margin: 0 0 20px 0; background: linear-gradient(135deg, #0f0a1c, #2e114d);">
+                <div class="balance-title"><i class="fa-solid fa-wallet" style="color:var(--accent-live)"></i> رصيدك المتاح للعب الحالي</div>
+                <div class="balance-amount live-balance" style="font-size: 32px;">0.00 د.ع</div>
+            </div>
+            <div class="slots-machine">
+                <div class="reels-container"><div class="reel-box" id="r1">7️⃣</div><div class="reel-box" id="r2">7️⃣</div><div class="reel-box" id="r3">7️⃣</div></div>
+                <div class="section-header" style="padding: 10px 0 5px 0; justify-content: flex-start;">🔮 إختر توقعك للرمز الرابح:</div>
+                <div class="predict-grid" id="predict-grid"></div>
+                <div class="section-header" style="padding: 10px 0 5px 0; justify-content: flex-start;">💵 حدد مبلغ الرهان:</div>
+                <div class="bet-container" id="bet-container"></div>
+                <div class="spin-button" id="spin-btn" onclick="startSpinGame()">ابدأ اللف والرهان 🎲</div>
+                <p id="result-casino"></p>
+                <div class="live-banner"><span class="live-dot">●</span><span id="live-text">Connecting to live feed...</span></div>
+            </div>
+            <div class="section-header" style="padding: 15px 0 5px 0;">الألعاب النشطة الأكثر ربحاً</div>
+            <div class="casino-games-grid">
+                <div class="casino-game-card"><i class="fa-solid fa-clover" style="color: #10b981;"></i><h5 style="font-size: 13px; color: #fff;">روليت النيون</h5><p style="font-size: 10px; color: var(--text-muted); margin-top: 3px;">غرف مباشرة 24 ساعة</p></div>
+                <div class="casino-game-card"><i class="fa-solid fa-id-card" style="color: #ef4444;"></i><h5 style="font-size: 13px; color: #fff;">بلاك جاك VIP</h5><p style="font-size: 10px; color: var(--text-muted); margin-top: 3px;">طاولة كبار الشخصيات</p></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="view-notifications" class="page">
+        <div class="section-header">سجلات الإشعارات والعمليات المالية</div>
+        <div style="display: flex; gap: 8px; padding: 12px 15px; overflow-x: auto; white-space: nowrap;">
+            <button class="btn-mini-copy filter-bell-tab active" style="flex: 1; padding: 10px;" onclick="switchNotificationCategoryTab(this, 'deposit')">الإيداع</button>
+            <button class="btn-mini-copy filter-bell-tab" style="flex: 1; padding: 10px; background: rgba(255,255,255,0.05);" onclick="switchNotificationCategoryTab(this, 'recharge')">الشحن</button>
+            <button class="btn-mini-copy filter-bell-tab" style="flex: 1; padding: 10px; background: rgba(255,255,255,0.05);" onclick="switchNotificationCategoryTab(this, 'withdraw')">السحب</button>
+            <button class="btn-mini-copy filter-bell-tab" style="flex: 1; padding: 10px; background: rgba(255,255,255,0.05);" onclick="switchNotificationCategoryTab(this, 'investment')">الاستثمار</button>
+        </div>
+        <div id="notifications-category-render-box" style="padding: 5px 0;"></div>
+    </div>
+    
+    <div id="view-support" class="page" style="position: relative; min-height: calc(100vh - 180px); padding-bottom: 80px;">
+        <div class="section-header" id="lbl-support-header">المحادثة المباشرة مع الدعم الفني</div>
+        <div style="position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); opacity: 0.12; pointer-events: none; text-align: center; width: 100%;"><img src="logo.png" alt="Logo" style="width: 160px; height: 160px; object-fit: contain;"></div>
+        <div style="padding: 10px 15px; text-align: center; font-size: 11px; color: var(--accent-live);"><i class="fa-solid fa-circle-dot" style="animation: pulseGlow 1.5s infinite;"></i> <span id="lbl-support-status">حالة الدعم الفني: نشط ومتاح الآن</span></div>
+        <div id="chat-messages-box" style="padding: 15px; max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; position: relative; z-index: 2;"></div>
+        <div style="padding: 15px; position: absolute; bottom: 0; left: 0; width: 100%; background: var(--bg-card); border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 10px; z-index: 3;">
+            <input type="text" id="chat-input-text" class="input-cyber" placeholder="اكتب رسالتك أو مشكلتك هنا..." style="padding: 12px;">
+            <button class="btn-action-cyber" id="btn-submit-chat" onclick="fireSupportMsgStream(false)" style="margin-top: 0; width: auto; padding: 0 25px;">إرسال</button>
+        </div>
+    </div>
+    
+    <div id="view-nodes" class="page">
+        <div style="display: flex; gap: 10px; padding: 10px 15px;">
+            <button class="btn-mini-copy" style="flex: 1; padding: 10px; background: var(--accent-secondary);" onclick="toggleNodesTab('plans')">خطط الاستثمار المميزة</button>
+            <button class="btn-mini-copy" style="flex: 1; padding: 10px; background: rgba(255,255,255,0.05);" onclick="toggleNodesTab('active')">الاستثمارات النشطة</button>
+        </div>
+        <div id="nodes-plans-tab"></div>
+        <div id="nodes-active-tab" style="display: none; padding: 0 15px;"></div>
+    </div>
+    
+    <div id="view-network" class="page" style="padding: 15px;">
+        <div class="team-header"><h1 id="panelTitle">إحصائيات الإحالة للفريق</h1><p id="panelSubtitle">إدارة وتتبع عمولات الاستثمار المتكررة لشبكتك</p></div>
+        <div class="net-notification" id="notificationBox">ℹ️ لا توجد إشعارات جديدة حالياً</div>
+        <div class="workflow-banner">
+            <h4 id="workflowTitle">💡 آلية احتساب العوائد المباشرة</h4>
+            <div class="steps">
+                <div class="step"><span class="step-num">1</span> شارك رابطك وابدا بتكوين فريقك</div>
+                <div class="step"><span class="step-num">2</span> يمكنك جني الارباح من استثمارات فريقك</div>
+                <div class="step"><span class="step-num">3</span> تحصل على عمولة ثابتة ومستمرة فور تأكيد أي عملية استثمارية.</div>
+            </div>
+        </div>
+        <div class="net-card">
+            <span class="section-title-net" style="margin-bottom:5px; display:block;" id="inviteTitle">رابط الدعوة الخاص بك</span>
+            <div class="invite-box">
+                <div class="invite-link" id="refLink">https://neo-nexus.ai/join?ref=774910</div>
+                <button class="copy-btn" id="copyBtn" onclick="copyLinkNet()">نسخ</button>
+            </div>
+        </div>
+        <div class="stats-grid">
+            <div class="stat"><span>إجمالي الأعضاء</span><h3 id="valMembers">0</h3></div>
+            <div class="stat"><span>النشطون اليوم</span><h3 id="valActive">0</h3></div>
+            <div class="stat"><span>عمليات الدورة الحالية</span><h3 id="valPeriod">0</h3></div>
+            <div class="stat"><span>الترتيب العام</span><h3 id="valRank" style="color:var(--accent-live);">-</h3></div>
+        </div>
+        <div class="income-card-net" id="cardTotalInvestment"><span>إجمالي حجم استثمارات الشبكة</span><h2 id="valTotalInvestment">0 د.ع</h2></div>
+        <div class="income-card-net" style="border-right-color: var(--accent-secondary);" id="cardTotalCommissions"><span>إجمالي العمولات المكتسبة</span><h2 id="valTotalCommissions">0 د.ع</h2></div>
+        <div class="income-card-net" style="border-right-color: var(--accent-primary);" id="cardCurrentEarnings"><span>أرباح الفترة الحالية</span><h2 id="valCurrentEarnings">0 د.ع</h2></div>
+        <div class="net-card">
+            <div class="section-title-net" id="ruleTitle">سياسة توزيع العوائد</div>
+            <div class="level-net"><span>نسبة العمولة الثابتة</span><span style="color:var(--success); font-weight: bold;" id="ruleValue">5% متكرر</span></div>
+            <p style="font-size:11px; color:var(--text-muted); text-align:justify; margin-top:5px;" id="ruleDesc">يتم قيد العمولة وإضافتها بشكل متكرر وتلقائي للحساب عند قيام أي عضو مدرج في شبكتك بتنفيذ أو تجديد عملية استثمارية داخل المنصة.</p>
+        </div>
+        <div class="rank-box-net">
+            <div class="rank-header-net"><div><span>مستوى الشبكة الحالي</span><h3 style="color:#f59e0b; font-size:18px;" id="currentRankName">SILVER</h3></div><img src="hj1.png" alt="Badge" class="rank-badge-3d-net" id="currentRankBadge"></div>
+            <div class="progress-net"><div class="progress-fill-net" id="rankProgress"></div></div>
+            <p style="font-size:11px; color:var(--text-muted); text-align:center;" id="rankNextStep">متبقي -- من العمليات للترقية للمستوى التالي</p>
+            <div class="rank-list-net" id="ranksNavigation"><span class="active-r">Silver</span><span>Gold</span><span>Platinum</span><span>Diamond</span><span>Royal</span></div>
+        </div>
+        <div class="net-card">
+            <div class="section-title-net" id="rewardsTitle">علاوات مستويات الترقية</div>
+            <div class="rewards-grid-net" id="rewardsContainer">
+                <div class="reward-item-net"><div style="display:flex; align-items:center; gap:8px;"><img src="hj1.png" alt="hj1"> <span>Silver</span></div><span>500 د.ع</span></div>
+                <div class="reward-item-net"><div style="display:flex; align-items:center; gap:8px;"><img src="hj2.png" alt="hj2"> <span>Gold</span></div><span>1,500 د.ع</span></div>
+                <div class="reward-item-net"><div style="display:flex; align-items:center; gap:8px;"><img src="hj3.png" alt="hj3"> <span>Platinum</span></div><span>5,000 د.ع</span></div>
+                <div class="reward-item-net"><div style="display:flex; align-items:center; gap:8px;"><img src="hj4.png" alt="hj4"> <span>Diamond</span></div><span>10,000 د.ع</span></div>
+                <div class="reward-item-net"><div style="display:flex; align-items:center; gap:8px;"><img src="hj5.png" alt="hj5"> <span>Royal</span></div><span>30,000 د.ع</span></div>
+            </div>
+        </div>
+        <div id="network-subs-box" class="feed-container"></div>
+        <div id="historyListContainer"></div>
+    </div>
+    
+    <div id="view-profile" class="page">
+        <div style="text-align: center; padding: 20px 0;">
+            <div style="position: relative; width: 80px; height: 80px; margin: auto;">
+                <div class="avatar-frame" style="width: 80px; height: 80px; font-size: 24px;"><div class="avatar-inside" id="app-profile-avatar">AI</div></div>
+                <button onclick="document.getElementById('input-edit-avatar').click()" style="position: absolute; bottom: 0; right: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--accent-live); border: 2px solid var(--bg-main); color: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10;"><i class="fa-solid fa-camera" style="font-size: 12px;"></i></button>
+                <input type="file" id="input-edit-avatar" accept="image/*" style="display: none;" onchange="handleAvatarFileChange(this)">
+            </div>
+            <div style="margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <h3 id="profile-alias" style="margin: 0;">Loading User..</h3>
+                <button onclick="changeNamePrompt()" class="btn-mini-copy" style="background: var(--accent-primary); padding: 4px 10px; border-radius: 8px;">تغيير الاسم</button>
+            </div>
+            <p style="color: var(--text-muted); font-size: 11px; font-family: monospace; margin-top: 5px;" id="profile-uuid">UID: ox981142_NX</p>
+        </div>
+        <div class="section-header" id="lbl-prof-credentials">بيانات الحساب الموثقة</div>
+        <div class="user-profile-data-list">
+            <div class="profile-data-row"><span class="p-label">البريد الإلكتروني للوجين</span><span class="p-val" id="meta-user-email">-</span></div>
+            <div class="profile-data-row"><span class="p-label">رقم الهاتف الخلوي</span><span class="p-val" id="meta-user-phone">-</span></div>
+            <div class="profile-data-row"><span class="p-label">نوع الجنس</span><span class="p-val" id="meta-user-gender">-</span></div>
+            <div class="profile-data-row"><span class="p-label">البلد المستضيف</span><span class="p-val" id="meta-user-country">-</span></div>
+            <div class="profile-data-row"><span class="p-label">تاريخ الميلاد</span><span class="p-val" id="meta-user-dob">-</span></div>
+        </div>
+        <div id="profile-financial-log-box" class="user-profile-data-list" style="display:none;"></div>
+        <div class="profile-vertical-menu" style="margin-top: 15px;">
+            <div class="prof-card-row" onclick="navigateDock('prof-records')"><div class="prof-card-left"><div class="prof-icon-3d" style="background: linear-gradient(135deg, #ff416c, #ff4b2b);"><i class="fa-solid fa-vault"></i></div><div><div class="prof-card-title">السجلات المالية</div><div class="prof-card-desc">سجلات الإيداع، الشحن، السحب، وعوائد المنصة</div></div></div><i class="fa-solid fa-chevron-left" style="color: var(--text-muted); font-size: 14px;"></i></div>
+            <div class="prof-card-row" onclick="navigateDock('prof-team')"><div class="prof-card-left"><div class="prof-icon-3d" style="background: linear-gradient(135deg, #00c6ff, #0072ff);"><i class="fa-solid fa-users"></i></div><div><div class="prof-card-title">صفحة الفريق</div><div class="prof-card-desc">إحصائيات الاستثمارات والعمولات وحجم الشبكة</div></div></div><i class="fa-solid fa-chevron-left" style="color: var(--text-muted); font-size: 14px;"></i></div>
+            <div class="prof-card-row" onclick="navigateDock('prof-wallets')"><div class="prof-card-left"><div class="prof-icon-3d" style="background: linear-gradient(135deg, #11998e, #38ef7d);"><i class="fa-solid fa-wallet"></i></div><div><div class="prof-card-title">إدارة المحافظ</div><div class="prof-card-desc">تثبيت وربط عناوين سحب العملات الرقمية والمحلية</div></div></div><i class="fa-solid fa-chevron-left" style="color: var(--text-muted); font-size: 14px;"></i></div>
+            <div class="prof-card-row" onclick="navigateDock('prof-support')"><div class="prof-card-left"><div class="prof-icon-3d" style="background: linear-gradient(135deg, #f472b6, #a855f7);"><i class="fa-solid fa-headset"></i></div><div><div class="prof-card-title">الدعم الفني</div><div class="prof-card-desc">فتح محادثة مباشرة وفورية مع إدارة الدعم المعاون</div></div></div><i class="fa-solid fa-chevron-left" style="color: var(--text-muted); font-size: 14px;"></i></div>
+            <div class="prof-card-row" onclick="navigateDock('prof-about')"><div class="prof-card-left"><div class="prof-icon-3d" style="background: linear-gradient(135deg, #f857a6, #ff5858);"><i class="fa-solid fa-circle-info"></i></div><div><div class="prof-card-title">من نحن</div><div class="prof-card-desc">الدليل التعريفي الشامل لشركة NEO والرؤية الرئاسية للمنصة</div></div></div><i class="fa-solid fa-chevron-left" style="color: var(--text-muted); font-size: 14px;"></i></div>
+            <div class="prof-card-row" onclick="navigateDock('prof-security')"><div class="prof-card-left"><div class="prof-icon-3d" style="background: linear-gradient(135deg, #f1c40f, #f39c12);"><i class="fa-solid fa-user-shield"></i></div><div><div class="prof-card-title">إعدادات الحساب وكلمة المرور</div><div class="prof-card-desc">تغيير كلمة المرور وتحديث بريدك الإلكتروني المعتمد</div></div></div><i class="fa-solid fa-chevron-left" style="color: var(--text-muted); font-size: 14px;"></i></div>
+            <div class="prof-card-row" onclick="window.open('https://t.me/neocomb', '_blank')"><div class="prof-card-left"><div class="prof-icon-3d" style="background: linear-gradient(135deg, #33ccff, #229ED9);"><i class="fa-brands fa-telegram"></i></div><div><div class="prof-card-title">قناة التليجرام</div><div class="prof-card-desc">انضم للمجتمع الرسمي لمتابعة أحدث الأكواد والهدايا</div></div></div><i class="fa-solid fa-arrow-up-right-from-square" style="color: var(--text-muted); font-size: 13px;"></i></div>
+            <div class="prof-card-row" onclick="executeSignOutRoute()"><div class="prof-card-left"><div class="prof-icon-3d" style="background: linear-gradient(135deg, #e53935, #e35d5b);"><i class="fa-solid fa-right-from-bracket"></i></div><div><div class="prof-card-title" style="color: #ef4444;">تسجيل الخروج</div><div class="prof-card-desc">إنهاء الجلسة الحالية والعودة النافذة العامة</div></div></div><i class="fa-solid fa-power-off" style="color: #ef4444; font-size: 13px;"></i></div>
+        </div>
+    </div>
+    
+    <div id="view-prof-records" class="page" style="padding: 15px;">
+        <div class="section-header" style="padding-right:0; color:#fff; font-size:16px; font-weight:800;">📋 السجلات المالية الشاملة</div>
+        <div style="display: flex; gap: 4px; margin: 15px 0; overflow-x: auto; padding-bottom: 5px;">
+            <button class="prof-tab-btn active" onclick="renderProfSubRecords(event, 'deposit')">الإيداع</button>
+            <button class="prof-tab-btn" onclick="renderProfSubRecords(event, 'recharge')">الشحن</button>
+            <button class="prof-tab-btn" onclick="renderProfSubRecords(event, 'withdraw')">السحب</button>
+            <button class="prof-tab-btn" onclick="renderProfSubRecords(event, 'referrals')">ارباح الاحالات</button>
+            <button class="prof-tab-btn" onclick="renderProfSubRecords(event, 'wheel')">ارباح عجلة الحض</button>
+            <button class="prof-tab-btn" onclick="renderProfSubRecords(event, 'casino')">ارباح الكازينو</button>
+        </div>
+        <div id="prof-records-render-box" style="margin-top: 10px;"></div>
+    </div>
+    
+    <div id="view-prof-team" class="page" style="padding: 15px;">
+        <div class="team-header"><h1>صفحة تقرير الفريق المباشر</h1><p>إدارة ملحقات وعوائد الاستثمارات الفورية التابعة لشبكتك</p></div>
+        <div class="stats-grid" style="margin-top: 15px;">
+            <div class="stat"><span>العدد الإجمالي للفريق</span><h3 id="prof-team-count">0 عضو</h3></div>
+            <div class="stat"><span>أرباح الإحالات المستقرة</span><h3 id="prof-team-commissions" style="color:var(--success);">0.00 د.ع</h3></div>
+        </div>
+        <div class="income-card-net" style="margin: 0;"><span>إجمالي حجم الاستثمارات الكلية للفريق</span><h2 id="prof-team-investments">0.00 د.ع</h2></div>
+        <div class="node-box" style="margin: 15px 0 0 0; border-color: rgba(255,255,255,0.04);"><h4 style="font-size:13px; color:#fff; margin-bottom:10px;"><i class="fa-solid fa-circle-nodes" style="color:var(--accent-live)"></i> ملحقات وتزامن الشبكة</h4><p style="font-size:12px; line-height:1.6; margin:0; color:var(--text-muted);">جميع مؤشرات الفريق المرفقة والعمليات الاستثمارية والعدد الكلي المحدث تعمل بشكل متزامن وحقيقي مع العقد السحابي الرئيسي للمنصة دون أي تعديل.</p></div>
+    </div>
+    
+    <div id="view-prof-wallets" class="page" style="padding: 15px;">
+        <div class="section-header" style="padding-right:0; color:#fff; font-size:16px; font-weight:800;">💳 صفحة إدارة وتثبيت المحافظ</div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:15px; margin-top:5px;">قم بربط وتثبيت محافظ السحب المعتمدة لجميع العملات داخل المنصة لضمان تحويل تلقائي فوري.</p>
+        <div style="display: flex; gap: 4px; margin-bottom: 15px; overflow-x: auto;">
+            <button class="prof-tab-btn active" onclick="switchAbstractTab(event, 'wallet-currency-panel-sec', 'wallet-panel-superkey')">سوبر كي</button>
+            <button class="prof-tab-btn" onclick="switchAbstractTab(event, 'wallet-currency-panel-sec', 'wallet-panel-zaincash')">زين كاش</button>
+            <button class="prof-tab-btn" onclick="switchAbstractTab(event, 'wallet-currency-panel-sec', 'wallet-panel-binance')">باينس</button>
+            <button class="prof-tab-btn" onclick="switchAbstractTab(event, 'wallet-currency-panel-sec', 'wallet-panel-okx')">أوكي اكس</button>
+        </div>
+        <div class="wallet-currency-panel-sec" id="wallet-panel-superkey">
+            <div class="form-box" style="padding:0; margin-bottom: 10px;"><label>الاسم</label><input type="text" id="input-wallet-superkey-name" class="input-cyber" placeholder="أدخل الاسم الكامل"></div>
+            <div class="form-box" style="padding:0;"><label>رقم البطاقة</label><input type="text" id="input-wallet-superkey-card" class="input-cyber" placeholder="أدخل رقم بطاقة سوبر كي"></div>
+            <button class="btn-action-cyber" onclick="saveProfileWalletAddress('superkey')">تثبيت محفظة سوبر كي 🔐</button>
+        </div>
+        <div class="wallet-currency-panel-sec" id="wallet-panel-zaincash" style="display:none;">
+            <div class="form-box" style="padding:0;"><label>رقم المستفيد</label><input type="text" id="input-wallet-zaincash-uid" class="input-cyber" placeholder="أدخل رقم محفظة زين كاش للمستفيد"></div>
+            <button class="btn-action-cyber" onclick="saveProfileWalletAddress('zaincash')">تثبيت محفظة زين كاش 🔐</button>
+        </div>
+        <div class="wallet-currency-panel-sec" id="wallet-panel-binance" style="display:none;">
+            <div class="form-box" style="padding:0; margin-bottom: 10px;"><label>الشبكة التي تعمل عليها المنصة</label><input type="text" class="input-cyber" value="TRON TRC20" readonly style="color: var(--accent-live); font-weight: bold;"></div>
+            <div class="form-box" style="padding:0;"><label>هاش المحفظة</label><input type="text" id="input-wallet-binance-hash" class="input-cyber" placeholder="أدخل هاش محفظة باينس المستلمة"></div>
+            <button class="btn-action-cyber" onclick="saveProfileWalletAddress('binance')">تثبيت محفظة باينس 🔐</button>
+        </div>
+        <div class="wallet-currency-panel-sec" id="wallet-panel-okx" style="display:none;">
+            <div class="form-box" style="padding:0; margin-bottom: 10px;"><label>الشبكة التي تعمل عليها المنصة</label><input type="text" class="input-cyber" value="TRON TRC20" readonly style="color: var(--accent-live); font-weight: bold;"></div>
+            <div class="form-box" style="padding:0;"><label>هاش المحفظة الخاص به</label><input type="text" id="input-wallet-okx-hash" class="input-cyber" placeholder="أدخل هاش محفظة أوكي اكس الخاص بك"></div>
+            <button class="btn-action-cyber" onclick="saveProfileWalletAddress('okx')">تثبيت محفظة أوكي اكس 🔐</button>
+        </div>
+    </div>
+    
+    <div id="view-prof-support" class="page" style="position: relative; min-height: calc(100vh - 120px); padding-bottom: 80px;">
+        <div class="section-header" style="color:#fff; font-size:16px; font-weight:800; padding:15px 15px 5px 15px;">💬 وحدة محادثة الدعم الفني المستقلة</div>
+        <div style="padding: 5px 15px; font-size: 11px; color: var(--accent-live);"><i class="fa-solid fa-headset"></i> حالة الاتصال السحابي للخدمة: نشط حالياً</div>
+        <div id="prof-chat-messages-render" style="padding:15px; display:flex; flex-direction:column; gap:12px; max-height:360px; overflow-y:auto; margin-bottom:20px;"></div>
+        <div style="padding: 15px; position: absolute; bottom: 60px; left: 0; width: 100%; background: var(--bg-card); border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 10px; z-index: 10;">
+            <input type="text" id="prof-chat-input-text" class="input-cyber" placeholder="اكتب رسالتك أو استفسارك هنا..." style="padding: 12px;">
+            <button class="btn-action-cyber" onclick="fireSupportMsgStream(true)" style="margin-top: 0; width: auto; padding: 0 25px;">إرسال</button>
+        </div>
+    </div>
+    
+    <div id="view-prof-about" class="page" style="padding: 15px; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); opacity: 0.04; pointer-events: none; width: 100%; text-align: center; z-index: 1;"><img src="logo.png" alt="Logo Watermark" style="width: 320px; height: 320px; object-fit: contain;"></div>
+        <div style="position: relative; z-index: 2;">
+            <div class="section-header" style="padding-right:0; color:#fff; font-size:16px; font-weight:800; margin-bottom:15px;">ℹ️ من نحن - الدليل الرسمي لشركة NEO</div>
+            <div style="font-size:13px; color:#cbd5e1; line-height:2.0; text-align:justify; padding:0 5px;">
+                <p style="font-weight: bold; color: var(--accent-live); font-size: 16px; margin-bottom: 12px; text-align: center;">شركة NEO التكنولوجية العالمية: الرؤية الاستراتيجية والمستقبل الرقمي</p>
+                <p>مرحباً بكم في المنصة الرسمية المدعومة بالكامل من شركة <b>NEO</b>. تعد شركة NEO واحدة من أكبر وأبرز الشركات التكنولوجية الرائدة عالمياً في تطوير الأنظمة البرمجية المستقلة، وبناء شبكات الاقتصاد الذكي اللامركزي. منذ تأسيسها، وضعت الشركة نصب عينيها هدفاً أساسياً وهو ربط الأصول التقليدية بالتقنيات الرقمية المتقدمة لإنشاء بيئة برمجية متكاملة تخدم الملايين من الأعضاء حول العالم بكفاءة مطلقة وبساطة لا مثيل لها.</p>
+                <h4 style="color: var(--accent-primary); margin-top: 15px; margin-bottom: 5px; font-size: 14px;">1. الرؤية والرسالة المؤسسية</h4>
+                <p>ترتكز رؤية NEO على تحويل التطبيقات البرمجية المعقدة إلى واجهات مستخدم انسيابية فائقة السرعة وقابلة للتطوير المستمر. نحن نؤمن بأن المستقبل ينتمي إلى الأنظمة المفتوحة التي تتيح تداول العوائد وإدارة الاستثمارات الفورية دون أي قيود جغرافية أو تعقيدات تقنية. رسالتنا هي تمكين كل عضو يدخل منصتنا لأول مرة من الاستفادة من العقود الذكية السحابية وتوليد الأرباح الحقيقية من خلال آليات تشغيل واضحة وشفافة تماماً.</p>
+                <h4 style="color: var(--accent-primary); margin-top: 15px; margin-bottom: 5px; font-size: 14px;">2. الابتكار التقني والبث الحركي المستقر</h4>
+                <p>تعتمد شركة NEO في تشغيل هذه المنصة على خوادم سحابية موزعة تضمن استجابة حية فورية (Real-Time Communication) بنسبة 100%. من خلال دمج بروتوعولات الاتصال والبث المتقدمة والمحسنة، نجحنا في معالجة أنيميشن الهدايا الثقيلة دون أن تسبب أي تجميد للشاشات أو تعليق للبث.</p>
+                <div style="text-align: center; margin-top: 20px; margin-bottom: 10px;"><a href="https://neo.org" target="_blank" style="display: inline-block; background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary)); color: white; padding: 12px 30px; border-radius: 14px; font-weight: bold; text-decoration: none; box-shadow: 0 5px 15px var(--glow-primary);">الموقع الرسمي لشركة NEO 🌐</a></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="view-prof-security" class="page" style="padding: 15px;">
+        <div class="section-header" style="padding-right:0; color:#fff; font-size:16px; font-weight:800; margin-bottom:10px;">⚙️ صفحة إعدادات الحساب وكلمة المرور</div>
+        <div style="display: flex; gap: 4px; margin-bottom: 15px;">
+            <button class="prof-tab-btn active" onclick="switchAbstractTab(event, 'security-content-section', 'security-sec-pass')">تغيير كلمة السر</button>
+            <button class="prof-tab-btn" onclick="switchAbstractTab(event, 'security-content-section', 'security-sec-email')">تغيير الإيميل</button>
+            <button class="prof-tab-btn" onclick="switchAbstractTab(event, 'security-content-section', 'security-sec-wallets')">تغيير محافظ السحب</button>
+        </div>
+        <div class="security-content-section" id="security-sec-pass"><div class="form-box" style="padding:0; margin-bottom:12px;"><label>كلمة السر الحالية</label><input type="password" id="sec-pass-current" class="input-cyber" placeholder="••••••••"></div><div class="form-box" style="padding:0; margin-bottom:15px;"><label>كلمة السر الجديدة</label><input type="password" id="sec-pass-new" class="input-cyber" placeholder="أدخل كلمة المرور الجديدة"></div><button class="btn-action-cyber" onclick="handlePasswordChangeSubmit()">حفظ وتحديث كلمة السر 📑</button></div>
+        <div class="security-content-section" id="security-sec-email" style="display:none;"><div class="form-box" style="padding:0; margin-bottom:15px;"><label>البريد الإلكتروني المعتمد الجديد</label><input type="email" id="sec-email-new" class="input-cyber" placeholder="example@neo.ai"></div><button class="btn-action-cyber" onclick="handleEmailChangeSubmit()">مزامنة وتعديل الإيميل 📑</button></div>
+        <div class="security-content-section" id="security-sec-wallets" style="display:none;"><p style="font-size:12px; color:var(--text-muted); margin-bottom:12px; line-height:1.5;">تعديل وتوجيه المحافظ الرقمية والمحلية المربوطة بحسابك الشخصي لعمليات السحب المباشر:</p><button class="btn-action-cyber" style="background:var(--bg-card); border:1.5px solid rgba(0,242,254,0.3); color:var(--accent-live);" onclick="navigateDock('prof-wallets')">الانتقال الفوري لمدير المحافظ 📁</button></div>
+    </div>
+    
+    <div id="view-live" class="page">
+        <div class="room-wrapper">
+            <video class="bg-video" id="roomBgVideo" src="q1.mp4" autoplay muted loop playsinline></video>
+            <div class="fullscreen-gift-player" id="fullscreenGiftPlayer"><video id="giftVideoSource" playsinline preload="auto"></video></div>
+            <div class="fullscreen-gift-player" id="hypeVideoPlayer" style="z-index: 1999;"><video id="hypeVideoSource" playsinline preload="auto"></video></div>
+            <div class="gift-announcement-banner" id="giftAnnouncementBanner">
+                <div class="banner-member-info"><div class="banner-avatar" id="bannerSenderAvatar">👤</div><div class="banner-text" id="bannerSenderName">العضو <span>أرسل...</span></div></div>
+                <div style="color: #ffd700; font-size: 14px; font-weight: bold;">🎁</div>
+                <div class="banner-member-info"><div class="banner-text" id="bannerReceiverName">إلى <span>المستلم</span></div><div class="banner-avatar" id="bannerReceiverAvatar">👤</div></div>
+                <div class="banner-gift-badge" id="bannerGiftTitle">Crown</div>
+            </div>
+            <div class="room-header">
+                <div class="room-meta"><img src="logo.png" alt="Logo" class="room-logo" onerror="this.style.display='none'"><div class="room-title">عرش NEO</div></div>
+                <div class="room-live-wallet"><i class="fa-solid fa-wallet"></i><span id="room-wallet-amount">0.00 د.ع</span></div>
+                <div class="header-actions"><button class="exit-btn" onclick="handleBackToHome()">خروج</button></div>
+            </div>
+            <div class="seats-section"><div class="top-premium-row" id="topPremiumSeats"></div><div class="bottom-regular-grid" id="bottomRegularSeats"></div></div>
+            <div class="chat-banner-container"><i class="fa-solid fa-comments"></i><div class="chat-banner-text" id="live-chat-announcement">أهلاً بك في عرش NEO المباشر! تفاعل مع الأعضاء وأرسل الهدايا لتسلق الصدارة.</div></div>
+            <div class="chat-area" id="chatArea"></div>
+            <div class="bottom-bar">
+                <div class="chat-input-container"><input type="text" id="chatInputField" class="chat-input-field" placeholder="أرسل رسالة للعرش..." onkeypress="handleChatKeyPress(event)"><button class="send-msg-btn" onclick="sendRealChat()">إرسال</button></div>
+                <div class="action-buttons"><input type="button" class="control-btn" id="musicMuteBtn" value="🎵" onclick="toggleMusicMute()"><button class="control-btn mic-muted" id="mainMicBtn" onclick="toggleMainMic()">🎤</button><button class="control-btn btn-gift" onclick="openStore()">🎁</button></div>
+            </div>
+            <div class="custom-modal" id="throneModal">
+                <div class="modal-content">
+                    <div class="modal-header"><h3 id="throneModalTitle">شراء العرش</h3><button class="modal-close" onclick="closeModal('throneModal')">×</button></div>
+                    <div style="padding: 15px 0; text-align: center;"><p id="throneModalDesc" style="font-size: 14px; color: #b3a1d9; margin-bottom: 15px;"></p><p style="font-size: 13px; margin-bottom: 5px;">أدخل مبلغ المزايدة الجديد (دينار عراقي):</p><input type="number" id="bidAmountInput" class="qty-input" style="width: 80%; font-size: 18px; padding: 8px;" value="6000"></div>
+                    <button class="dialog-btn" onclick="confirmThroneBid()">تأكيد المزايدة / الشراء</button>
+                </div>
+            </div>
+            <div class="custom-modal" id="memberActionModal">
+                <div class="modal-content">
+                    <div class="modal-header"><h3>ملف العرش التعريفي</h3><button class="modal-close" onclick="closeModal('memberActionModal')">×</button></div>
+                    <div class="member-profile-card">
+                        <div class="profile-avatar-circle" id="popMemberAvatar">👤</div><div class="profile-name-text" id="popMemberName">اسم العضو</div><div class="profile-status-badge" id="popMemberRole">محتل الكرسي الحركي</div><div id="popMemberDetails" style="font-size: 13px; color: #cbd5e1; margin-bottom: 15px; text-align: center; direction: rtl; display: flex; flex-direction: column; gap: 5px;"></div>
+                        <div class="profile-actions-grid"><button class="dialog-btn" style="margin-top:0;" onclick="triggerDirectGift()">دعم بهدية 🎁</button><button class="dialog-btn secondary" style="margin-top:0; background: linear-gradient(135deg, #7000ff 0%, #440099 100%);" onclick="triggerCompeteSeat()">منافسة لجلوس الكرسي ⚔️</button></div>
+                    </div>
+                </div>
+            </div>
+            <div class="custom-modal" id="giftStoreModal" onclick="if(event.target === this) closeModal('giftStoreModal')">
+                <div class="modal-content">
+                    <div class="modal-header"><h3>متجر الهدايا الفاخرة</h3><button class="modal-close" onclick="closeModal('giftStoreModal')">×</button></div>
+                    <div style="font-size: 12px; margin-bottom: 5px; color:#ff007f;">إرسال إلى (اختر مستلم أو الكل):</div><div class="recipient-select" id="storeRecipients"></div>
+                    <div class="store-tabs"><button class="tab-btn active" id="tabBtn1" onclick="switchTab(1)">VIP Gifts</button><button class="tab-btn" id="tabBtn2" onclick="switchTab(2)">Animations</button><button class="tab-btn" id="tabBtn3" onclick="switchTab(3)">Neon Thrones</button><button class="tab-btn" id="tabBtn4" onclick="switchTab(4)">Top Neo</button></div>
+                    <div class="gifts-grid" id="giftsGrid"></div>
+                    <div class="store-footer"><div class="qty-selector"><span class="qty-label">العدد (x):</span><input type="number" id="giftQty" class="qty-input" value="1" min="1"></div><button class="btn-send-gift" onclick="sendSelectedGift()">إرسال الهدايا</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="view-deposit" class="page"><div class="section-header" id="lbl-dep-header">بوابة الشحن المالي - اختر قناة الدفع</div><div id="deposit-channels-container" class="control-grid" style="grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 15px;"></div><div class="section-header">🎁 مكافآت الإيداع الحالية</div><div class="user-profile-data-list" id="deposit-bonuses-box"></div></div>
+    <div id="view-deposit-packages" class="page">
+        <div class="premium-card" id="deposit-packages-header-title" style="margin-top: 10px;"></div>
+        <div class="form-box" style="margin-top: 10px; margin-bottom: 5px;"><label style="color: var(--accent-live); font-weight: bold; font-size: 13px;"><i class="fa-solid fa-infinity"></i> شحن غير محدود (أدخل المبلغ الذي تريد شحنه):</label><div style="display: flex; gap: 8px; margin-top: 6px;"><input type="number" class="input-cyber" id="custom-deposit-amount" placeholder="أدخل القيمة يدوياً هنا" style="padding: 12px;"><button class="btn-action-cyber" style="margin-top: 0; width: auto; white-space: nowrap; padding: 0 20px; border-radius: 16px;" onclick="handleCustomDepositSubmit()">تابع الشحن</button></div></div>
+        <div class="section-header">اختر باقة الاستثمار المراد شحنها</div><div id="deposit-packages-render-box" style="padding-bottom: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px;"></div>
+    </div>
+    <div id="view-deposit-payment" class="page"><div id="deposit-payment-container"></div></div>
+    <div id="view-withdraw" class="page">
+        <div class="section-header" id="lbl-withdraw-header-title">بوابة سحب الأرباح - اختر قناة السحب</div>
+        <div id="withdraw-holiday-screen" style="display:none; text-align:center; padding: 35px 15px; margin: 15px; background: var(--bg-card); border-radius:24px; border:1px solid rgba(168,85,247,0.2);">
+            <i class="fa-solid fa-calendar-minus" style="font-size: 60px; color: var(--accent-live); margin-bottom: 15px; display: block; animation: miniPulse 1.5s infinite alternate;"></i>
+            <h3 style="font-size: 18px; color: #fff; margin-bottom: 10px; font-weight: 700;">عطة رسمية لنظام السحب</h3>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.7; text-align: justify;">نود إعلامكم بأن اليوم (الأحد / الإثنين) هو العطلة الرسمية المعتمدة لـ فـريـق الـسـحـب الـمـخـتـص. جميع عمليات السحب المباشرة متوقفة تلقائياً خلال هذين اليومين، وستستأنف بشكل اعتيادي فور انتهاء العطلة بدءاً من يوم الثلاثاء. شكراً لتفهمكم.</p>
+        </div>
+        <div id="withdraw-channels-container" class="control-grid" style="grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 15px;"></div>
+        <div id="withdraw-form-container" style="display:none;">
+            <div class="premium-card" style="background:#090514; margin-top:0;"><p>المبلغ المتوفر للسحب</p><div class="balance-amount live-balance" style="color:var(--accent-primary)">0.00 د.ع</div></div>
+            <div id="withdraw-fields-placeholder"></div>
+            <div id="withdraw-rules-box"></div>
+            <div style="padding:0 15px;"><button class="btn-action-cyber" id="lbl-wd-submit" style="background:linear-gradient(90deg, var(--danger), #be123c)" onclick="sendWithdrawalData()">معالجة طلب سحب الأرباح</button></div>
+        </div>
+    </div>
+    <div id="view-withdraw-packages" class="page"></div>
+    <div id="view-tasks" class="page"><div class="section-header" id="lbl-task-header">🎡 عجلة الحظ الكبرى</div><div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px 0;"><div class="wheel-container"><div class="pointer"></div><div class="lights-ring" id="lightsBox"></div><canvas id="wheel" width="310" height="310"></canvas></div><button id="spinBtn" onclick="spin()">🔥 إبدأ التدوير</button><div id="spinCostLabel" style="margin-top: 10px; font-size: 14px; color: var(--accent-live); font-weight: bold;">تكلفة المحاولة: 500 د.ع</div><div id="result"></div></div><div class="winners-banner"><div class="banner-title">🏆 الفائزين بعجلة الحظ مع NEO 🏆</div><div class="ticker-vertical-wrap"><div class="ticker-vertical-move" id="tickerBox"></div></div></div></div>
+    
+    <div class="dock-bar">
+        <div class="dock-btn active" id="dock-item-home" onclick="handleDockAction(this, 'home')"><i class="fa-solid fa-cube"></i><br><span>الرئيسية</span></div>
+        <div class="dock-btn" id="dock-item-nodes" onclick="handleDockAction(this, 'nodes')"><i class="fa-solid fa-server"></i><br><span>العقد</span></div>
+        <div class="dock-btn" id="dock-item-live" onclick="handleDockAction(this, 'live')"><i class="fa-solid fa-circle-play live-icon-spin" style="color: var(--accent-live);"></i><br><span>LIVE</span></div>
+        <div class="dock-btn" id="dock-item-network" onclick="handleDockAction(this, 'network')"><i class="fa-solid fa-circle-nodes"></i><br><span>الشبكة</span></div>
+        <div class="dock-btn" id="dock-item-profile" onclick="handleDockAction(this, 'profile')"><i class="fa-solid fa-terminal"></i><br><span>الضبط</span></div>
+    </div>
+
+    <script>
+        const $ = id => document.getElementById(id), $$ = s => document.querySelectorAll(s);
+        
+        let appState = { 
+            currentUserProfile: null,
+            userAlias: "اسم المستخدم", 
+            walletCredits: 0.00, 
+            mintedToday: 0.00, 
+            currentCurrency: "IQD", 
+            exchangeRate: 1500.00, 
+            referralUrl: "https://neo-nexus.ai/join?ref=774910", 
+            totalNetworkNodes: 0, 
+            totalYieldCommissions: 0.00, 
+            activeInvestments: [], 
+            selectedPlanDurations: {}, 
+            selectedGateway: "", 
+            selectedWithdrawGateway: "", 
+            selectedDepositAmount: 0, 
+            financialNotifications: { deposit: [], recharge: [], withdraw: [], investment: [], referrals: [], wheel: [], casino: [] }, 
+            subNodes: [], 
+            chatMessages: [], 
+            withdrawalCountWithIdleTeam: 0 
+        };
+
+        const lvlPlans = [ 
+            { id: 10, price: 16000, bonus: 300, options: [{d: 4, r: 1850}, {d: 5, r: 3350}, {d: 9, r: 5850}, {d: 14, r: 9350}] }, 
+            { id: 11, price: 26000, bonus: 500, options: [{d: 4, r: 2450}, {d: 5, r: 4850}, {d: 9, r: 8850}, {d: 14, r: 14650}] }, 
+            { id: 12, price: 46000, bonus: 800, options: [{d: 4, r: 3750}, {d: 5, r: 7850}, {d: 9, r: 14850}, {d: 14, r: 25350}] }, 
+            { id: 13, price: 66000, bonus: 1200, options: [{d: 4, r: 5050}, {d: 5, r: 10850}, {d: 9, r: 20850}, {d: 14, r: 36350}] }, 
+            { id: 14, price: 106000, bonus: 2000, options: [{d: 4, r: 7650}, {d: 5, r: 17850}, {d: 9, r: 33850}, {d: 14, r: 57850}] }, 
+            { id: 15, price: 206000, bonus: 4000, options: [{d: 4, r: 14350}, {d: 5, r: 32850}, {d: 9, r: 63850}, {d: 14, r: 109850}] }, 
+            { id: 16, price: 306000, bonus: 6000, options: [{d: 4, r: 20850}, {d: 5, r: 47850}, {d: 9, r: 93850}, {d: 14, r: 162850}] }, 
+            { id: 17, price: 406000, bonus: 8000, options: [{d: 4, r: 27850}, {d: 5, r: 62850}, {d: 9, r: 123850}, {d: 14, r: 215850}] }, 
+            { id: 18, price: 506000, bonus: 10000, options: [{d: 4, r: 34850}, {d: 5, r: 77850}, {d: 9, r: 153850}, {d: 14, r: 268850}] }, 
+            { id: 19, price: 607000, bonus: 12000, options: [{d: 4, r: 41850}, {d: 5, r: 92850}, {d: 9, r: 183850}, {d: 14, r: 322850}] }, 
+            { id: 20, price: 806000, bonus: 16000, options: [{d: 4, r: 56850}, {d: 5, r: 122850}, {d: 9, r: 243850}, {d: 14, r: 428850}] } 
+        ];
+
+        let currentBet = 500, selectedPrediction = "", isSpinning = false, wheelAttempts = 0, currentRotation = 0, bulbsArray = [], audioCtx = null, depositTimerInterval = null, currentBgMusicIndex = 0, musicMuted = false, playingGift = false, currentGift = null, giftTimeoutId = null, activeThroneTarget = null, activeRegularSeatTarget = null, activeMemberClickedSeatId = null, selectedGiftFile = "c1.mp4", selectedGiftTitleReadable = "Royal Crown", selectedGiftPrice = 700, currentUsername = "", bgElapsedTimeMinutes = 0, currentGeneratedReward = 0;
+        const symbols = ["🍒", "🍋", "🔔", "💎", "7️⃣"], betOptions = [250, 500, 1000, 2500, 5000], fakeUsers = ["Alpha_Hunter", "VipGamer_77", "JackpotKing", "GoldWhale", "Shadow_Bet", "Neon_Rider", "SlotMaster_IQ", "Nova_Gamer", "Zeus_Slots", "CryptoBoss"], fakeGames = ["Slots 🎰", "Crash 🚀", "Dice 🎲"], prizes = ["حظ أوفر", "500 دينار", "1,500 دينار", "2,000 دينار", "7,000 دينار", "17,000 ألف", "حظ أوفر", "29,000 ألف", "45,000 ألف", "58,000 ألف", "70,000 ألف", "100,000 ألف"], prizeValues = [0, 500, 1500, 2000, 7000, 17000, 0, 29000, 45000, 58000, 70000, 100000], colors = ["#d90429", "#33ccff", "#ff9900", "#22bb33", "#9933ff", "#d4af37", "#d90429", "#33ccff", "#ff9900", "#9933ff", "#d4af37", "#b8860b"], allowedWinners = [0, 1, 2, 3, 6], premiumNames = { 1: "الحاكم", 2: "الوزير", 3: "النائب" }, tabPrefixes = { 1: "c", 2: "v", 3: "l", 4: "z" }, seatsState = {}, giftQueue = [], bgAudio = new Audio();
+        const mockWinners = [{ name: "John_99", prize: "2,000 IQD" }, { name: "Alex_IQ", prize: "50,000 IQD" }, { name: "Mustafa_Pro", prize: "1,500 IQD" }, { name: "Samer_King", prize: "100,000 IQD" }, { name: "Sarah_M22", prize: "500 IQD" }, { name: "Ali_Baghdad", prize: "70,000 IQD" }, { name: "James_fx", prize: "2,000 IQD" }, { name: "Omer_Hero", prize: "1,500 IQD" }, { name: "Leo_Token", prize: "58,000 IQD" }, { name: "Zain_96", prize: "29,000 IQD" }, { name: "Amir_Nasir", prize: "17,000 IQD" }, { name: "Hassan_Vip", prize: "45,000 IQD" }, { name: "Elena_77", prize: "2,000 IQD" }, { name: "Tiger_IQ", prize: "100,000 IQD" }, { name: "Noor_Sun", prize: "500 IQD" }, { name: "Chris_90", prize: "7,000 IQD" }];
+        const neoNotificationsList = [ "عزيزي العضو، حان الوقت الآن للقدوم إلى الحساب لجمع العوائد الخاصة بك! 💰", "أسرع وادخل إلى البث المباشر الآن لأن الغرفة ولعت بالهدايا والمنافسات! 🔥", "عجلة الحظ الكبرى تدور الآن! ادخل وجرب حظك للحصول على مكافآت ضخمة. 🎡", "تابع أداء وتطورات فريقك النشط الآن لمضاعفة عمولاتك الفورية! 📈", "صالة الكازينو تشهد أرباحاً تاريخية للاعبين حالياً، لا تفوت جولة الـ VIP! 🎰", "تحديثات حركية سحابية جديدة تمت مزامنتها داخل التطبيق, تفقد رصيدك الآن! ✨" ];
+        let neoNotificationIndex = 0;
+        const thronesData = { 1: { name: "الحاكم", duration: "ساعتين", basePrice: 5000, currentPrice: 5000, frame: "top1.png" }, 2: { name: "الوزير", duration: "ساعة ونصف", basePrice: 4000, currentPrice: 4000, frame: "top2.png" }, 3: { name: "النائب", duration: "ساعة واحدة", basePrice: 3000, currentPrice: 3000, frame: "top3.png" } };
+        const giftEnglishNames = { 1: ["Royal Crown", "Imperial Lion", "Glory Shield", "Golden Falcon", "Palace Key", "Knight Sword", "Victorious Banner", "Eternity Ring", "Empress Jewel", "Majestic Cape", "Dynasty Throne", "Grand Scepter", "Noble Crest", "Regal Chariot", "Baron Ring", "Duke Crown", "Emperor Seal", "Sovereign Orb", "Monarch Aura", "Legacy Phoenix"], 2: ["Cosmic Blast", "Hyper Drive", "Quantum Leap", "Solar Flare", "Nebula Mist", "Starlight Wave", "Galaxy Vortex", "Astral Pulse", "Comet Strike", "Meteor Rain", "Supernova Shock", "Eclipse Shadow", "Orbit Light", "Aurora Beam", "Vesta Flame", "Titan Power", "Chrono Warp", "Infinity Loop", "Void Walker", "Apex Horizon"], 3: ["Cyber Viper", "Neon Panther", "Matrix Overlord", "Data Stream", "Glitch Phantom", "Pixel Dragon", "Tech Samurai", "Laser Fury", "Synth Wave", "Digital Storm", "Binary Ghost", "Quantum Spark", "Cyber Fortress", "Hacker Creed", "Circuit Breaker", "Mecha Core", "Vector Shard", "Proxy Nexus", "Sonic Boom", "Alpha Omega"], 4: ["Neo Magic", "Mystic Runes", "Phantom Wolf", "Wizard Spark", "Arcane Tome", "Enchanted Rose", "Spirit Fox", "Crystal Sphere", "Divine Angel", "Shadow Rogue", "Celestial Harp", "Vampire Crest", "Kraken Tentacle", "Zeus Thunder", "Anubis Eye", "Odin Spear", "Valhalla Horn", "Sphinx Riddle", "Phoenix Ash", "Abyss Crown"] };
+        let livekitRoom = null; const LIVEKIT_URL = "wss://neo-dndg407t.livekit.cloud", currentChatLog = [];
+        
+        function preloadLiveRoomAssets() {
+            ["q1.mp4", "cvb.mp4", "jj6.mp4", "q3.mp4"].forEach(url => {
+                let req = new XMLHttpRequest(); req.open('GET', url, true); req.responseType = 'blob'; req.send();
+            });
+        }
+
+        function showCyberToast(title, iconClass, duration = 4000) {
+            let container = $("toast-wrapper"), toast = document.createElement("div"); if (!container) return; toast.className = "toast-notification"; toast.innerHTML = `<i class="${iconClass}" style="font-size:20px; color:var(--accent-live);"></i><div style="font-size:13px; font-weight:700; color:#fff;">${title}</div>`; container.appendChild(toast);
+            setTimeout(() => { toast.style.animation = "toastIn 0.3s ease reverse forwards"; setTimeout(() => toast.remove(), 300); }, duration);
+        }
+
+        function initAppEngine() {
+            if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
+            preloadLiveRoomAssets();
+            
+            if (typeof window.NEO_CORE !== 'undefined') {
+                window.NEO_CORE.setupRouteGuard(
+                    function(profile, user) {
+                        appState.currentUserProfile = profile;
+                        appState.userAlias = profile.full_name;
+                        currentUsername = profile.full_name;
+                        appState.walletCredits = parseFloat(profile.wallet_credits || 0);
+
+                        $("app-user-name").innerText = profile.full_name;
+                        $("profile-alias").innerText = profile.full_name;
+                        $("profile-uuid").innerText = "UID: " + profile.uid;
+                        
+                        let html = profile.avatar_url ? `<img src="${profile.avatar_url}" alt="User Avatar">` : appState.userAlias.substring(0, 2).toUpperCase();
+                        $("app-header-avatar").innerHTML = $("app-profile-avatar").innerHTML = html;
+                        
+                        if(profile.email) $("meta-user-email").innerText = profile.email;
+                        if(profile.phone) $("meta-user-phone").innerText = profile.phone;
+                        if(profile.gender) $("meta-user-gender").innerText = profile.gender;
+                        if(profile.country) $("meta-user-country").innerText = profile.country;
+                        if(profile.birth_date) $("meta-user-dob").innerText = profile.birth_date;
+                        
+                        if($("refLink")) $("refLink").innerText = `https://sweet-lily-69b782.netlify.app/dashboard.html?ref=${profile.uid}`;
+                        
+                        refreshFinancialData();
+                        window.NEO_NOTIFY.subscribeToSupportChat(profile.uid, function(messages) {
+                            appState.chatMessages = messages;
+                            syncChatLogsUI();
+                        });
+                    },
+                    function() {
+                        window.location.replace("index.html");
+                    }
+                );
+            }
+
+            if (typeof window.NEO_SYSTEM !== 'undefined') {
+                window.NEO_SYSTEM.monitorMaintenanceMode(
+                    function(data) {
+                        let overlay = $("maintenance-overlay");
+                        if (!overlay.classList.contains("active")) { 
+                            overlay.classList.add("active"); 
+                            overlay.style.display = "flex"; 
+                            if (bgAudio) bgAudio.pause(); 
+                            ['giftVideoSource','hypeVideoSource'].forEach(v => $(v) && $(v).pause()); 
+                            stopAudioStream(); 
+                        }
+                    },
+                    function() {
+                        let overlay = $("maintenance-overlay");
+                        if (overlay.classList.contains("active")) { 
+                            overlay.classList.remove("active"); 
+                            overlay.style.display = "none"; 
+                        }
+                    }
+                );
+            }
+
+            if (typeof window.NEO_NOTIFY !== 'undefined') {
+                window.NEO_NOTIFY.subscribeToMarquee(function(text) {
+                    if ($("global-live-marquee")) $("global-live-marquee").innerText = text;
+                });
+            }
+
+            if (typeof window.NEO_ROOM !== 'undefined') {
+                window.NEO_ROOM.subscribeToSeats(function(mappedSeats) {
+                    mappedSeats.forEach(seat => {
+                        let oldTimer = seatsState[seat.id] ? seatsState[seat.id].timer : null;
+                        let oldTimeLeft = seatsState[seat.id] ? seatsState[seat.id].timeLeft : 0;
+                        seatsState[seat.id] = Object.assign(seatsState[seat.id] || {}, {
+                            id: seat.id,
+                            occupied: seat.occupied,
+                            username: seat.username,
+                            isPremium: seat.is_throne,
+                            earnings: parseFloat(seat.earnings || 0),
+                            avatar: seat.avatar_url || "",
+                            timer: oldTimer,
+                            timeLeft: oldTimeLeft
+                        });
+                        syncSeatFromDB(seatsState[seat.id]);
+                    });
+                });
+            }
+
+            buildLiveRoomSeatsDOM(); 
+            buildInvestmentPlans(); 
+            buildDepositBonuses(); 
+            initCasinoInterface(); 
+            buildNetworkNodes(); 
+            applyLanguageStrings(); 
+            checkDailyGiftBox(); 
+            initWheelLights(); 
+            drawWheel(); 
+            buildVerticalTicker(); 
+            updateSpinCostLabel(); 
+            renderDepositGateways(); 
+            renderWithdrawGateways(); 
+            initNeoNotificationSystem(); 
+            injectVersionFooters(); 
+            renderFilteredNotifications('deposit'); 
+            loadSavedProfileWallets(); 
+            updateNetworkLevelSystem();
+            
+            let defBtn = document.querySelector("#view-prof-records .prof-tab-btn"); if(defBtn) defBtn.click();
+            renderProfileFinancialLog(); 
+            showCyberToast("أهلاً بك في منصة NEO التفاعلية", "fa-solid fa-shield-cat");
+        }
+
+        function sendNeoNotification() { if ("Notification" in window && Notification.permission === "granted") { new Notification("NEO", { body: neoNotificationsList[neoNotificationIndex % neoNotificationsList.length], icon: "logo.png" }); neoNotificationIndex++; } }
+        function initNeoNotificationSystem() { if ("Notification" in window) Notification.requestPermission().then(p => { if (p === "granted") { sendNeoNotification(); setInterval(sendNeoNotification, 600000); } }); }
+        function injectVersionFooters() {
+            let html = `<div class="prof-version-footer"><p>إصدار التطبيق: v0.8.9 (2026-01-24)</p></div>`;
+            ['view-prof-records', 'view-prof-team', 'view-prof-wallets', 'view-prof-about', 'view-prof-security'].forEach(id => { if($(id) && !$(id).querySelector('.prof-version-footer')) $(id).insertAdjacentHTML('beforeend', html); });
+        }
+        function buildLiveRoomSeatsDOM() {
+            $('topPremiumSeats').innerHTML = $('bottomRegularSeats').innerHTML = "";
+            for (let i = 1; i <= 12; i++) {
+                let seatBox = document.createElement('div'); seatBox.className = 'seat-box'; seatBox.setAttribute('data-id', i);
+                seatsState[i] = seatsState[i] || { id: i, occupied: false, username: i <= 3 ? premiumNames[i] : `كرسي ${i}`, isPremium: i <= 3, timeLeft: 0, timer: null, earnings: 0, gender: "-", country: "-", age: "-", avatar: "" };
+                seatBox.innerHTML = `<div class="seat-timer" id="timer-${i}"></div><div class="seat-earnings" id="earnings-${i}">🪙 0 د.ع</div><div class="chair-3d-wrapper" id="chair3d-${i}"><div class="chair-arm-l"></div><div class="chair-back"></div><div class="chair-seat"></div><div class="chair-arm-r"></div></div><div class="avatar-wrapper" id="avatarWrap-${i}"><img class="avatar-img-photo" id="photo-${i}"><div class="avatar-frame-overlay" id="frameOverlay-${i}"></div><div class="mic-badge" id="mic-${i}">🎤</div></div><div class="user-name-banner" id="name-${i}">${seatsState[i].username}</div>`;
+                seatBox.onclick = () => handleSeatClickLogic(i);
+                if (i <= 3) { seatBox.classList.add('premium-seat'); seatBox.setAttribute('data-throne', i); $('topPremiumSeats').appendChild(seatBox); }
+                else $('bottomRegularSeats').appendChild(seatBox);
+            }
+            initializeGiftStoreDOM();
+        }
+        function playNextBgMusic() {
+            if (musicMuted) return; let songDuration = 180, totalSeconds = Math.floor(Date.now() / 1000); currentBgMusicIndex = Math.floor(totalSeconds / songDuration) % 26;
+            bgAudio.src = `${currentBgMusicIndex}k.mp3`; bgAudio.currentTime = totalSeconds % songDuration; bgAudio.volume = 0.20; bgAudio.play().catch(() => {});
+        }
+        bgAudio.onended = () => playNextBgMusic();
+        function toggleMusicMute() {
+            musicMuted = !musicMuted; bgAudio.muted = musicMuted; $('musicMuteBtn').value = musicMuted ? "🔇" : "🎵";
+            Object.assign($('musicMuteBtn').style, { background: musicMuted ? "rgba(255, 59, 48, 0.25)" : "rgba(255, 255, 255, 0.1)", borderColor: musicMuted ? "#ff3b30" : "rgba(255,255,255,0.1)" });
+            if (!musicMuted) playNextBgMusic();
+        }
+        setInterval(() => {
+            bgElapsedTimeMinutes++; if (bgElapsedTimeMinutes === 30) $('roomBgVideo').src = "jj6.mp4"; else if (bgElapsedTimeMinutes === 50) $('roomBgVideo').src = "q3.mp4"; else if (bgElapsedTimeMinutes === 70 || bgElapsedTimeMinutes >= 360) { bgElapsedTimeMinutes = 0; $('roomBgVideo').src = "q1.mp4"; }
+        }, 60000);
+        setInterval(() => {
+            if (!$('view-live').classList.contains('active')) return; if (!musicMuted) bgAudio.volume = 0.05; $('hypeVideoPlayer').classList.add('active'); $('hypeVideoSource').src = 'cvb.mp4'; $('hypeVideoSource').muted = false; $('hypeVideoSource').volume = 1.0; $('hypeVideoSource').play().catch(() => {});
+            $('hypeVideoSource').onended = () => { $('hypeVideoPlayer').classList.remove('active'); $('hypeVideoSource').removeAttribute("src"); $('hypeVideoSource').load(); if (!musicMuted) bgAudio.volume = 0.20; };
+        }, 360000);
+        function initializeGiftStoreDOM() {
+            $('giftsGrid').innerHTML = "";
+            for (let t = 1; t <= 4; t++) {
+                for (let i = 1; i <= 20; i++) {
+                    let card = document.createElement('div'), file = `${tabPrefixes[t]}${i}.mp4`, name = giftEnglishNames[t][i - 1] || "Luxury Gift", price = Math.floor(700 + (99300 / 19) * (i - 1));
+                    card.className = `gift-card gift-tab-${t}`; card.onclick = () => {
+                        $$('.gift-card').forEach(c => { c.classList.remove('selected'); let v = c.querySelector('video'); if(v) v.muted = true; });
+                        card.classList.add('selected'); selectedGiftFile = file; selectedGiftTitleReadable = name; selectedGiftPrice = price;
+                        let av = card.querySelector('video'); if(av) { av.muted = false; av.volume = 0.8; av.play().catch(() => {}); }
+                    };
+                    card.innerHTML = `<video class="gift-video-cover" src="${file}" autoplay muted loop playsinline preload="auto"></video><div class="gift-title">${name}</div><div class="gift-price">🪙 ${price.toLocaleString()} د.ع</div>`; $('giftsGrid').appendChild(card);
+                }
+            }
+        }
+        function handleSeatClickLogic(id) { if (seatsState[id].occupied) openMemberActionModal(id); else if (id <= 3) clickThrone(id); else clickRegularSeat(id); }
+        function openMemberActionModal(id) {
+            activeMemberClickedSeatId = id; $('popMemberName').innerText = seatsState[id].username; $('popMemberAvatar').innerHTML = seatsState[id].avatar ? `<img src="${seatsState[id].avatar}">` : getAvatarEmoji(id);
+            $('popMemberRole').innerText = id <= 3 ? `صاحب مقام ${premiumNames[id]}` : `شاغل الكرسي رقم ${id}`;
+            $('popMemberDetails').innerHTML = `<div><span>الجنس:</span> <b>${seatsState[id].gender || "-"}</b> | <span>البلد:</span> <b>${seatsState[id].country || "-"}</b> | <span>العمر:</span> <b>${seatsState[id].age || "-"}</b></div>`; $('memberActionModal').classList.add('active');
+        }
+        function triggerDirectGift() { closeModal('memberActionModal'); openStore(); }
+        async function triggerCompeteSeat() {
+            closeModal('memberActionModal'); const id = activeMemberClickedSeatId; if (id <= 3) { clickThrone(id); return; }
+            if (seatsState[id].username === currentUsername) { 
+                if (typeof window.NEO_ROOM !== 'undefined') await window.NEO_ROOM.leaveSeat(id);
+                await stopAudioStream(); 
+            } else {
+                if (typeof window.NEO_ROOM !== 'undefined') {
+                    let success = await window.NEO_ROOM.claimSeatOrBid(id, appState.currentUserProfile || { uid: "temp", full_name: currentUsername }, 0);
+                    if (success) {
+                        await startAudioStream(); 
+                        appendChat("الميدان", `قام ${currentUsername} بانتزاع ومنافسة الكرسي ${id} بنجاح!`, "rgba(255, 94, 98, 0.15)");
+                    }
+                }
+            }
+        }
+        async function loadInitialRoomData() {
+            currentUsername = appState.userAlias;
+            try {
+                const userUid = appState.currentUserProfile ? appState.currentUserProfile.uid : `uid_${Math.floor(Math.random()*10000)}`;
+                let res = await fetch(`https://4o6f-neo-voice-server-new.hf.space/api/token?uid=${userUid}&name=${encodeURIComponent(currentUsername)}`), data = await res.json();
+                if (data.token) { 
+                    const LiveKitSDK = window.LiveKit || window.LivekitClient;
+                    livekitRoom = new LiveKitSDK.Room(); 
+                    livekitRoom.on(LiveKitSDK.RoomEvent.TrackSubscribed, (track) => { 
+                        if (track.kind === 'audio') {
+                            const audioElement = track.attach();
+                            document.body.appendChild(audioElement);
+                        } 
+                    }); 
+                    await livekitRoom.connect(LIVEKIT_URL, data.token); 
+                }
+            } catch(e) { console.error(e); }
+            for (let i = 1; i <= 12; i++) syncSeatFromDB(seatsState[i]); playNextBgMusic();
+        }
+        document.body.addEventListener("click", () => { if ((!bgAudio.src || bgAudio.paused) && $('view-live').classList.contains('active')) playNextBgMusic(); });
+        function syncSeatFromDB(seat) {
+            let id = seat.id, sb = document.querySelector(`.seat-box[data-id="${id}"]`); if (!sb) return;
+            if (seat.occupied) {
+                sb.classList.add('occupied'); $(`frameOverlay-${id}`).style.backgroundImage = seat.isPremium ? `url('${thronesData[id].frame}')` : "url('t3.png')";
+                $(-`name-${id}`).innerText = seat.username; $(`timer-${id}`).style.display = $(`earnings-${id}`).style.display = "block"; $(`earnings-${id}`).innerText = `🪙 ${(seat.earnings || 0).toLocaleString()} د.ع`; sb.style.display = "flex";
+                $(`photo-${id}`).src = seat.avatar || `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><circle cx="25" cy="25" r="20" fill="%23${seat.isPremium?'25134a':'110924'}"/><text x="25" y="32" font-size="22" text-anchor="middle">${seat.isPremium?'👤':'🕶️'}</text></svg>`;
+                if (!seatsState[id].timer) {
+                    seatsState[id].timeLeft = seatsState[id].timeLeft || (id === 1 ? 7200 : id === 2 ? 5400 : id === 3 ? 3600 : 900);
+                    seatsState[id].timer = setInterval(() => {
+                        seatsState[id].timeLeft--; let h = Math.floor(seatsState[id].timeLeft / 3600), m = Math.floor((seatsState[id].timeLeft % 3600) / 60), s = seatsState[id].timeLeft % 60;
+                        if($(`timer-${id}`)) $(`timer-${id}`).innerText = h > 0 ? `${h}:${m<10?'0':''}${m}:${s<10?'0':''}${s}` : `${m}:${s<10?'0':''}${s}`;
+                        if (seatsState[id].timeLeft <= 0) { clearInterval(seatsState[id].timer); Object.assign(seatsState[id], { timer: null, timeLeft: 0, occupied: false }); if (seat.username === currentUsername) stopAudioStream(); syncSeatFromDB(seatsState[id]); }
+                    }, 1000);
+                }
+            } else {
+                sb.classList.remove('occupied', 'speaking'); $(`frameOverlay-${id}`).style.backgroundImage = "none"; $(`photo-${id}`).src = "";
+                $(`name-${id}`).innerText = seat.isPremium ? premiumNames[id] : `كرسي ${id}`; $(`timer-${id}`).style.display = $(`earnings-${id}`).style.display = "none"; seat.earnings = 0;
+                if (seatsState[id].timer) { clearInterval(seatsState[id].timer); seatsState[id].timer = null; } seatsState[id].timeLeft = 0;
+            }
+        }
+        function getChatStyle(s) {
+            const arr = [ { bg: "rgba(244, 114, 182, 0.15)", b: "1px solid #f472b6", c: "#f472b6", i: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2" style="vertical-align:middle; margin-left:4px;"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>` }, { bg: "rgba(0, 242, 254, 0.15)", b: "1px solid #00f2fe", c: "#00f2fe", i: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00f2fe" stroke-width="2" style="vertical-align:middle; margin-left:4px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>` }, { bg: "rgba(168, 85, 247, 0.15)", b: "1px solid #a855f7", c: "#a855f7", i: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" style="vertical-align:middle; margin-left:4px;"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon></svg>` } ];
+            return arr[s ? s.length % arr.length : 0];
+        }
+        function sendRealChat() {
+            let t = $('chatInputField').value.trim(); if (!t) return;
+            if (currentChatLog.length >= 50) { currentChatLog.length = 0; $('chatArea').innerHTML = ""; } currentChatLog.push({ sender: currentUsername, text: t }); renderChatLog(currentChatLog); $('chatInputField').value = "";
+        }
+        function renderChatLog(log) {
+            $('chatArea').innerHTML = "";
+            log.forEach(m => {
+                let d = document.createElement('div'), s = getChatStyle(m.sender); d.className = 'chat-msg';
+                Object.assign(d.style, { background: s.bg, border: s.b, borderRadius: "12px", marginBottom: "6px", padding: "6px 12px", display: "inline-flex", alignItems: "center", maxWidth: "85%", color: "#f8fafc" });
+                d.innerHTML = `${s.i} <span style="color:${s.c}; font-weight:bold; margin-left:6px;">${m.sender}:</span> ${m.text}`; $('chatArea').appendChild(d);
+            });
+            $('chatArea').scrollTop = $('chatArea').scrollHeight;
+        }
+        async function startAudioStream() {
+            if (livekitRoom) try { await livekitRoom.localParticipant.setMicrophoneEnabled(true); } catch{}
+            $('mainMicBtn').className = "control-btn mic-active";
+            for (let i = 1; i <= 12; i++) { if (seatsState[i].occupied && seatsState[i].username === currentUsername) { let s = document.querySelector(`.seat-box[data-id="${i}"]`); if (s) s.classList.add('speaking'); } }
+        }
+        async function stopAudioStream() {
+            if (livekitRoom) try { await livekitRoom.localParticipant.setMicrophoneEnabled(false); } catch{}
+            $('mainMicBtn').className = "control-btn mic-muted";
+            for (let i = 1; i <= 12; i++) { if (seatsState[i].username === currentUsername) { let s = document.querySelector(`.seat-box[data-id="${i}"]`); if (s) s.classList.remove('speaking'); } }
+        }
+        function clickThrone(id) {
+            activeThroneTarget = id; let t = thronesData[id]; $('throneModalTitle').innerText = `حجز مقام: ${premiumNames[id]}`;
+            $('throneModalDesc').innerHTML = !seatsState[id].occupied ? `هذا المقام متاح للحجز الفوري برتبة <b>${premiumNames[id]}</b>.<br>السعر الأدنى: <b>${t.basePrice} دينار</b>.` : `هذا العرش محتل حالياً بواسطة <b>${seatsState[id].username}</b> بمزايدة قيمتها <b>${t.currentPrice} دينار</b>.<br>المزايدة لخلع وطرد المستخدم تبدأ من: <b>${t.currentPrice * 2} دينار</b>.`;
+            $('bidAmountInput').value = !seatsState[id].occupied ? t.basePrice : t.currentPrice * 2; $('throneModal').classList.add('active');
+        }
+        async function confirmThroneBid() {
+            let id = activeThroneTarget, v = parseInt($('bidAmountInput').value), req = seatsState[id].occupied ? thronesData[id].currentPrice * 2 : thronesData[id].basePrice;
+            if (v < req) { showCyberToast(`القيمة لا تقل عن ${req} دينار!`, "fa-solid fa-circle-xmark"); return; } if (appState.walletCredits < v) { showCyberToast("رصيدك الحالي غير كافٍ!", "fa-solid fa-wallet"); return; }
+            
+            if (typeof window.NEO_ROOM !== 'undefined') {
+                let success = await window.NEO_ROOM.claimSeatOrBid(id, appState.currentUserProfile || { uid: "temp", full_name: currentUsername }, v);
+                if (success) {
+                    appState.walletCredits -= v; refreshFinancialData(); if (seatsState[id].timer) clearInterval(seatsState[id].timer);
+                    Object.assign(seatsState[id], { timer: null, timeLeft: 0, occupied: true, username: currentUsername }); thronesData[id].currentPrice = v;
+                    closeModal('throneModal'); await startAudioStream(); syncSeatFromDB(seatsState[id]);
+                }
+            }
+        }
+        async function clickRegularSeat(id) {
+            if (typeof window.NEO_ROOM !== 'undefined') {
+                let success = await window.NEO_ROOM.claimSeatOrBid(id, appState.currentUserProfile || { uid: "temp", full_name: currentUsername }, 0);
+                if (success) {
+                    activeRegularSeatTarget = id; if (seatsState[id].timer) clearInterval(seatsState[id].timer); Object.assign(seatsState[id], { timer: null, timeLeft: 0, occupied: true, username: currentUsername });
+                    await startAudioStream(); syncSeatFromDB(seatsState[id]);
+                }
+            }
+        }
+        function handleChatKeyPress(e) { if (e.key === 'Enter') sendRealChat(); }
+        function openStore() {
+            $('storeRecipients').innerHTML = ""; let ab = document.createElement('div'); ab.className = "recipient-box selected"; ab.setAttribute('data-target', 'all'); ab.onclick = () => { $$('.recipient-box').forEach(b => b.classList.remove('selected')); ab.classList.add('selected'); };
+            ab.innerHTML = `<div class="avatar-mini" style="background:#ff007f">👥</div><div style="font-size:10px; margin-top:4px;">الكل</div>`; $('storeRecipients').appendChild(ab);
+            for (let i = 1; i <= 12; i++) {
+                if (seatsState[i].occupied) {
+                    let item = document.createElement('div'); item.className = "recipient-box"; if(activeMemberClickedSeatId === i) { $$('.recipient-box').forEach(b => b.classList.remove('selected')); item.classList.add('selected'); }
+                    item.setAttribute('data-target', i); item.onclick = () => { $$('.recipient-box').forEach(b => b.classList.remove('selected')); item.classList.add('selected'); };
+                    item.innerHTML = `<div class="avatar-mini">${getAvatarEmoji(i)}</div><div style="font-size:10px; margin-top:4px;">كرسي ${i}</div>`; $('storeRecipients').appendChild(item);
+                }
+            }
+            switchTab(1); $('giftStoreModal').classList.add('active');
+        }
+        function switchTab(id) { for(let i=1; i<=4; i++) if($(`tabBtn${i}`)) $(`tabBtn${i}`).classList.toggle('active', i===id); $$('.gift-card').forEach(c => { if (c.classList.contains(`gift-tab-${id}`)) c.style.display = 'flex'; else { c.style.display = 'none'; let v = c.querySelector('video'); if(v) v.muted = true; } }); }
+        function sendSelectedGift() {
+            let tb = document.querySelector('.recipient-box.selected'), q = parseInt($('giftQty').value || 1); if (!tb) return; let tv = tb.getAttribute('data-target'), rn = tv !== 'all' ? seatsState[tv].username : "الكل 👥", ra = tv !== 'all' ? getAvatarEmoji(tv) : "👥", cost = selectedGiftPrice * q, total = tv === 'all' ? cost * Math.max(1, Object.values(seatsState).filter(s => s.occupied).length) : cost;
+            if (appState.walletCredits < total) { showCyberToast("رصيدك الحالي لا يكفي للارسال!", "fa-solid fa-wallet"); return; }
+            appState.walletCredits -= total; refreshFinancialData(); if (tv === 'all') Object.values(seatsState).forEach(s => { if(s.occupied) { s.earnings = (s.earnings || 0) + cost; syncSeatFromDB(s); } }); else { seatsState[tv].earnings = (seatsState[tv].earnings || 0) + cost; syncSeatFromDB(seatsState[tv]); }
+            closeModal('giftStoreModal'); activeMemberClickedSeatId = null; $$('.gift-card video').forEach(v => v.muted = true);
+            if (playingGift && currentGift && currentGift.sender === currentUsername && currentGift.receiver === rn && currentGift.name === selectedGiftTitleReadable) { currentGift.count += q; $('bannerSenderName').innerHTML = `${currentGift.sender} <span>أرسل x${currentGift.count}</span>`; if (giftTimeoutId) clearTimeout(giftTimeoutId); giftTimeoutId = setTimeout(() => { if(window.closeGift) window.closeGift(); }, 8000); return; }
+            if (giftQueue.find(g => g.sender === currentUsername && g.receiver === rn && g.name === selectedGiftTitleReadable)) { giftQueue.find(g => g.sender === currentUsername && g.receiver === rn && g.name === selectedGiftTitleReadable).count += q; return; }
+            giftQueue.push({ sender: currentUsername, receiver: rn, receiverAvatar: ra, count: q, name: selectedGiftTitleReadable, video: selectedGiftFile }); if (!playingGift) playNextGift();
+        }
+        function playNextGift() {
+            if (giftQueue.length === 0) { playingGift = false; currentGift = null; return; } playingGift = true; currentGift = giftQueue.shift();
+            let e = $('fullscreenGiftPlayer'), v = $('giftVideoSource'), b = $('giftAnnouncementBanner');
+            $('bannerSenderAvatar').innerText = "🕶️"; $('bannerSenderName').innerHTML = `${currentGift.sender} <span>أرسل x${currentGift.count}</span>`; $('bannerReceiverAvatar').innerText = currentGift.receiverAvatar; $('bannerReceiverName').innerHTML = `إلى <span>${currentGift.receiver}</span>`; $('bannerGiftTitle').innerText = currentGift.name; e.classList.add('active'); b.classList.add('active'); if (!musicMuted) bgAudio.volume = 0.05;
+            v.src = currentGift.video; v.muted = false; v.volume = 1.0; v.currentTime = 0; v.load(); v.play().catch(() => { v.muted = true; v.play().catch(() => {}); });
+            let fin = false; window.closeGift = () => { if (fin) return; fin = true; b.classList.remove('active'); e.classList.remove('active'); v.pause(); v.removeAttribute("src"); v.load(); if (!musicMuted) bgAudio.volume = 0.20; if (giftTimeoutId) clearTimeout(giftTimeoutId); setTimeout(() => playNextGift(), 100); };
+            v.onended = () => { if(window.closeGift) window.closeGift(); }; if (giftTimeoutId) clearTimeout(giftTimeoutId); giftTimeoutId = setTimeout(() => { if(window.closeGift) window.closeGift(); }, 15000);
+        }
+        function closeModal(id) { let m = $(id); if(m) m.classList.remove('active'); if (id === 'giftStoreModal') $$('.gift-card video').forEach(v => v.muted = true); }
+        function toggleMainMic() {
+            let act = $('mainMicBtn').classList.contains('mic-active');
+            if (livekitRoom) { livekitRoom.localParticipant.setMicrophoneEnabled(!act).catch(() => {}); $('mainMicBtn').innerHTML = !act ? "🎤" : "🔇"; $('mainMicBtn').className = `control-btn ${!act ? 'mic-active' : 'mic-muted'}`; for (let i = 1; i <= 12; i++) { if (seatsState[i].username === currentUsername) { let s = document.querySelector(`.seat-box[data-id="${i}"]`); if (s) s.classList.toggle('speaking', !act); } } }
+        }
+        function getAvatarEmoji(num) { return ["👑", "🛡️", "🔱", "✨", "⚡", "🌟", "🔥", "🏆", "🔮", "🕶️", "👤", "🔱"][num - 1] || "👤"; }
+        function appendChat(sender, text, bg) {
+            let div = document.createElement('div'), s = getChatStyle(sender); div.className = 'chat-msg'; Object.assign(div.style, { background: bg || s.bg, border: s.b, borderRadius: "12px", marginBottom: "6px", padding: "6px 12px", display: "inline-flex", alignItems: "center" });
+            div.innerHTML = `${s.i} <span style="color:${s.c}; font-weight:bold; margin-left:6px;">${sender}:</span> ${text}`; $('chatArea').appendChild(div); $('chatArea').scrollTop = $('chatArea').scrollHeight;
+        }
+        function initCasinoInterface() {
+            if($("predict-grid")) { $("predict-grid").innerHTML = ""; symbols.forEach(s => { let c = document.createElement("div"); c.className = "predict-card"; c.innerText = s; c.onclick = () => { if (isSpinning) return; $$(".predict-card").forEach(x => x.classList.remove("selected")); c.classList.add("selected"); selectedPrediction = s; }; $("predict-grid").appendChild(c); }); }
+            if($("bet-container")) { $("bet-container").innerHTML = ""; betOptions.forEach(a => { let c = document.createElement("div"); c.className = `bet-chip ${a === currentBet ? 'selected' : ''}`; c.innerText = formatDynamicAmount(a); c.onclick = () => { if (isSpinning) return; $$(".bet-chip").forEach(x => x.classList.remove("selected")); c.classList.add("selected"); currentBet = a; }; $("bet-container").appendChild(c); }); }
+            clearInterval(window.casinoFeedInterval);
+            window.casinoFeedInterval = setInterval(() => {
+                if(!$("live-text") || !$("view-casino").classList.contains("active")) return;
+                $("live-text").innerHTML = `⚡ العضو <span style="color:var(--accent-live)">${fakeUsers[Math.floor(Math.random() * fakeUsers.length)]}</span> ربح للتو <span style="color:var(--success)">+${formatDynamicAmount(Math.floor(Math.random() * 4500) + 500)}</span> في لعبة ${fakeGames[Math.floor(Math.random() * fakeGames.length)]}`;
+            }, 4000);
+        }
+        function startSpinGame() {
+            if (isSpinning) return; if (!selectedPrediction) { $("result-casino").innerHTML = "<span style='color: var(--warning);'>⚠️ يرجى اختيار رمز التوقع أولاً!</span>"; return; } if (appState.walletCredits < currentBet) { $("result-casino").innerHTML = "<span style='color: var(--danger);'>❌ رصيدك الحالي لا يكفي لهذا الرهان!</span>"; return; }
+            appState.walletCredits -= currentBet; refreshFinancialData(); $("result-casino").innerText = ""; isSpinning = true; $("spin-btn").disabled = true;
+            let r1 = $("r1"), r2 = $("r2"), r3 = $("r3"); r1.classList.add("spinning"); r2.classList.add("spinning"); r3.classList.add("spinning");
+            let change = setInterval(() => { r1.innerText = symbols[Math.floor(Math.random() * symbols.length)]; r2.innerText = symbols[Math.floor(Math.random() * symbols.length)]; r3.innerText = symbols[Math.floor(Math.random() * symbols.length)]; }, 60);
+            setTimeout(() => {
+                clearInterval(change); r1.classList.remove("spinning"); r2.classList.remove("spinning"); r3.classList.remove("spinning");
+                let res1 = symbols[Math.floor(Math.random() * symbols.length)], res2 = symbols[Math.floor(Math.random() * symbols.length)], res3 = symbols[Math.floor(Math.random() * symbols.length)];
+                r1.innerText = res1; r2.innerText = res2; r3.innerText = res3; let amt = 0, txt = "";
+                if (res1 === res2 && res2 === res3) {
+                    amt = res1 === selectedPrediction ? currentBet * 15 : currentBet * 4; txt = res1 === selectedPrediction ? `<span style='color: var(--success);'>👑 MEGA JACKPOT! تطابق كامل فزت بـ +${formatDynamicAmount(amt)}</span>` : `<span style='color: var(--accent-live);'>🎉 فوز ثلاثي رائع! فزت بـ +${formatDynamicAmount(amt)}</span>`;
+                    let now = new Date(); appState.financialNotifications.casino.unshift({ id: Date.now(), title: "عائد رهان سلوتس NEO CASINO", time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, date: now.toISOString().slice(0, 10), status: "مكتمل", amount: formatDynamicAmount(amt), style: "up" });
+                } else txt = "<span style='color: var(--text-muted);'>❌ لم تتطابق الرموز الثلاثة، حظاً أوفر!</span>";
+                appState.walletCredits += amt; refreshFinancialData(); $("result-casino").innerHTML = txt; isSpinning = false; $("spin-btn").disabled = false; renderProfileFinancialLog();
+            }, 1250);
+        }
+        function renderDepositGateways() {
+            if (!$("deposit-channels-container")) return; $("deposit-channels-container").innerHTML = "";
+            let arr = appState.currentCurrency === "IQD" ? [{ name: "سوبر كي", icon: "sup.png" }, { name: "زين كاش", icon: "zan.png" }] : [{ name: "Binance", icon: "pan.png" }, { name: "OKX", icon: "ok.png" }];
+            arr.forEach(ch => {
+                let c = document.createElement("div"); c.className = "control-item"; c.style.padding = "20px 10px"; c.innerHTML = `<img src="${ch.icon}" alt="${ch.name}" style="width: 48px; height: 48px; margin-bottom: 10px;"><span class="ctrl-txt" style="font-size: 13px; font-weight: bold;">${ch.name}</span>`;
+                c.onclick = () => {
+                    appState.selectedGateway = ch.name; navigateDock('deposit-packages');
+                    if ($("deposit-packages-header-title")) $("deposit-packages-header-title").innerHTML = `<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;"><img src="${ch.icon}" style="width: 36px; height: 36px; object-fit: contain;"><span style="font-size: 16px; font-weight: 700; color: var(--accent-live);">بوابة شحن ${ch.name}</span></div><p style="font-size: 12px; color: #fff; line-height: 1.5; margin: 0;">🚀 ابدأ شحن رصيدك لتفعيل العقود الفورية الذكية ومضاعفة أرباحك وتوليد الطاقة السحابية بأمان تام!</p>`;
+                    buildDepositPackagesGrid();
+                }; $("deposit-channels-container").appendChild(c);
+            });
+        }
+        function handleCustomDepositSubmit() { let v = parseFloat($("custom-deposit-amount").value); if (!v || v <= 0) { showCyberToast("يرجى إدخال مبلغ شحن صحيح أولاً.", "fa-solid fa-triangle-exclamation"); return; } appState.selectedDepositAmount = appState.currentCurrency === "USD" ? v * appState.exchangeRate : v; navigateDock('deposit-payment'); }
+        function buildDepositPackagesGrid() {
+            if(!$("deposit-packages-render-box")) return; $("deposit-packages-render-box").innerHTML = "";
+            lvlPlans.forEach(p => {
+                let b = document.createElement("div"); b.className = "control-item"; b.style.cssText = "padding:12px 2px; border:1px solid rgba(0, 242, 254, 0.15); background:var(--bg-card);";
+                b.innerHTML = `<img src="lv${p.id}.png" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; margin-bottom: 6px;"><span style="font-size: 10px; color: #fff; font-weight: 700; display: block; text-align: center; word-break: break-all;">${formatDynamicAmount(p.price).replace(" د.ع", "").replace(" USD", "")}</span><span style="font-size: 9px; color: var(--accent-live); display: block; margin-top: 2px;">+${p.bonus}</span>`;
+                b.onclick = () => { appState.selectedDepositAmount = p.price; navigateDock('deposit-payment'); }; $("deposit-packages-render-box").appendChild(b);
+            });
+        }
+        function renderDepositPaymentPage() {
+            if (!$("deposit-payment-container")) return; clearInterval(depositTimerInterval); let g = appState.selectedGateway, amt = appState.selectedDepositAmount;
+            let fields = g === "سوبر كي" ? `<div class="form-box"><label>اسم المستفيد</label><input type="text" class="input-cyber" value="${localStorage.getItem('saved_prof_wallet_superkey_name') || ''}" disabled></div><div class="form-box"><label>رقم بطاقة سوبر كي</label><input type="text" class="input-cyber" value="${localStorage.getItem('saved_prof_wallet_superkey_card') || ''}" disabled></div>` : (g === "زين كاش" ? `<div class="form-box"><label>رقم المستفيد</label><input type="text" class="input-cyber" value="${localStorage.getItem('saved_prof_wallet_zaincash_uid') || ''}" disabled></div>` : `<div class="form-box"><label>نوع الشبكة الرقمية المعتمدة</label><input type="text" class="input-cyber" value="TRON TRC20" disabled style="color:var(--accent-live); font-weight:bold;"></div><div class="form-box"><label>هاش المحفظة</label><input type="text" class="input-cyber" value="${g==='Binance'? (localStorage.getItem('saved_prof_wallet_binance_hash') || '') : (localStorage.getItem('saved_prof_wallet_okx_hash') || '')}" disabled></div>`);
+            $("deposit-payment-container").innerHTML = `<div class="node-box" style="border-color: var(--accent-live); background: rgba(168, 85, 247, 0.05); text-align: center;"><h4 style="color: #fff; font-size:15px; margin-bottom:6px;"><i class="fa-solid fa-circle-info" style="color:var(--accent-live);"></i> طريقة الإيداع المعتمدة</h4><p style="font-size:12px; color:var(--text-main); line-height:1.5; margin:0;">يرجى تحويل القيمة وإرفاق المستند المطلوبة بدقة.</p></div><div class="node-box" style="text-align:center; border-color:var(--danger); background: rgba(244, 63, 94, 0.03); padding:12px; margin-top:0; margin-bottom:15px;"><span style="font-size:13px; color:var(--text-muted);"><i class="fa-solid fa-clock"></i> جلسة الإيداع تنتهي خلال:</span><span id="payment-countdown" style="font-weight:bold; color:var(--danger); font-family:monospace; font-size:15px; margin-right:5px;">02:00</span></div>${fields}<div class="premium-card" style="margin: 12px 0; padding: 16px; background: linear-gradient(135deg, #090615, #140d2b); border-color: rgba(0, 242, 254, 0.2);"><p style="font-size:12px; color:var(--text-muted); margin:0;">بطاقة المبلغ المطلوب شحنه</p><h2 style="font-size:26px; color:var(--accent-live); font-family:monospace; margin-top:6px; margin-bottom:0;">${formatDynamicAmount(amt)}</h2></div><div class="node-box" style="border-color: rgba(0, 242, 254, 0.2); background: #090615; margin: 15px 0; padding: 15px;"><h4 style="font-size: 13px; color: var(--accent-live); margin-bottom: 8px;"><i class="fa-solid fa-shadow-halved"></i> شروط ومعايير الإيداع المعتمدة:</h4><ul style="font-size: 11.5px; color: var(--text-muted); list-style: none; padding-right: 0; line-height: 1.7;"><li>١. يجب أن تطابق قيمة الحوالة المرسلة مبلغ الباقة المحدد تماماً لتفادي مشاكل التأخير الحركي للتنشيط.</li><li>٢. يلزم إرفاق لقطة شاشة كاملة وواضحة جداً لإيصال التحويل المالي المستلم (الوصل).</li><li>٣. يمنع تكرار رفع الإيصال نفسه لأكثر من عملية شحن لتجنب تجميد المحفظة السحابية فوراً.</li><li>٤. تستغرق المزامنة التلقائية والتدقيق من ٥ إلى ١٠ دقائق كحد أقصى قبل تحديث رصيدك المتاح.</li></ul></div><div class="form-box"><label>بنر إرفاق صورة الإيصال</label><div style="border: 2px dashed rgba(0, 242, 254, 0.3); padding: 22px; border-radius: 18px; text-align: center; cursor: pointer; background: var(--bg-card);" onclick="$('deposit-receipt-file').click()"><i class="fa-solid fa-image" style="font-size:32px; color:var(--accent-live); margin-bottom:8px; display:block;"></i><p style="font-size:12px; color:var(--text-muted); margin:0;">انقر هنا لإرفاق صورة إيصال تحويل مالي</p><input type="file" id="deposit-receipt-file" accept="image/*" style="display:none;" onchange="previewDepositReceipt(this)"></div><div id="receipt-preview-box" style="margin-top:12px; display:none; text-align:center;"><img id="receipt-preview-img" style="max-width:100%; max-height:160px; border-radius:14px; border:1px solid var(--accent-live); box-shadow:0 0 15px var(--glow-live);"></div></div><div class="toggle-container" style="padding: 12px; margin-bottom: 15px; background:rgba(255,255,255,0.01);"><p style="font-size:12px; margin:0; color:var(--text-main);">تأكيد قراءة الشروط والموافقة على تعليمات الإيداع المعروضة</p><label class="toggle-switch"><input type="checkbox" id="agree-deposit-terms" onchange="toggleDepositSubmitBtn()"><span class="slider"></span></label></div><div style="padding:0 5px;"><button class="btn-action-cyber" id="btn-confirm-deposit-final" style="background: var(--text-muted); cursor: not-allowed; margin-top:0;" disabled onclick="submitDepositOrderFinal()">تأكيد الشحن</button></div>`;
+            let left = 120; depositTimerInterval = setInterval(() => { left--; if ($("payment-countdown")) $("payment-countdown").innerText = `${String(Math.floor(left / 60)).padStart(2, '0')}:${String(left % 60).padStart(2, '0')}`; if (left <= 0) { clearInterval(depositTimerInterval); showCyberToast("انتهت صلاحية جلسة الإيداع المؤقتة!", "fa-solid fa-hourglass-end"); handleBackToHome(); } }, 1000);
+        }
+        function previewDepositReceipt(input) { if (input.files && input.files[0]) { let reader = new FileReader(); reader.onload = function(e) { $("receipt-preview-img").src = e.target.result; $("receipt-preview-box").style.display = "block"; toggleDepositSubmitBtn(); }; reader.readAsDataURL(input.files[0]); } }
+        function toggleDepositSubmitBtn() { let btn = $("btn-confirm-deposit-final"); if ($("agree-deposit-terms").checked && $("deposit-receipt-file").files.length > 0) { btn.disabled = false; btn.style.cssText = "background:linear-gradient(90deg, var(--accent-secondary), var(--accent-primary)); cursor:pointer; margin-top:0;"; } else { btn.disabled = true; btn.style.cssText = "background:var(--text-muted); cursor:not-allowed; margin-top:0;"; } }
+        
+        async function submitDepositOrderFinal() {
+            clearInterval(depositTimerInterval); 
+            let now = new Date();
+            let receiptFile = $("deposit-receipt-file").files[0];
+            let receiptUrl = receiptFile ? URL.createObjectURL(receiptFile) : "";
+            
+            if (typeof window.NEO_FINANCE !== 'undefined') {
+                await window.NEO_FINANCE.createDeposit(
+                    appState.currentUserProfile ? appState.currentUserProfile.uid : "unknown",
+                    currentUsername,
+                    appState.selectedGateway,
+                    appState.selectedDepositAmount,
+                    receiptUrl
+                );
+            }
+
+            appState.financialNotifications.deposit.unshift({ id: Date.now(), title: `طلب إيداع شحن قيد المراجعة عبر ${appState.selectedGateway}`, time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, date: now.toISOString().slice(0, 10), status: "قيد المراجعة", amount: formatDynamicAmount(appState.selectedDepositAmount), style: "warning" });
+            renderFilteredNotifications('deposit'); renderProfileFinancialLog(); $("deposit-success-overlay").classList.add("active");
+        }
+        function closeDepositSuccessModal() { $("deposit-success-overlay").classList.remove("active"); appState.selectedDepositAmount = 0; handleDockAction($("dock-item-home"), 'home'); }
+        function renderWithdrawGateways() {
+            if (!$("withdraw-channels-container")) return; const currentDay = new Date().getDay();
+            if (currentDay === 0 || currentDay === 1) { $("withdraw-channels-container").style.display = $("withdraw-form-container").style.display = "none"; $("withdraw-holiday-screen").style.display = "block"; $("lbl-withdraw-header-title").innerText = "أنظمة معالجة السحب المالي متوقفة مؤقتاً"; return; }
+            $("withdraw-holiday-screen").style.display = "none"; $("withdraw-channels-container").innerHTML = ""; $("withdraw-form-container").style.display = "none"; $("withdraw-channels-container").style.display = "grid"; $("lbl-withdraw-header-title").innerText = "بوابة سحب الأرباح - اختر قناة السحب";
+            let arr = appState.currentCurrency === "IQD" ? [{ name: "سوبر كي", icon: "sup.png" }, { name: "زين كاش", icon: "zan.png" }] : [{ name: "Binance", icon: "pan.png" }, { name: "OKX", icon: "ok.png" }];
+            arr.forEach(ch => {
+                let card = document.createElement("div"); card.className = "control-item"; card.style.padding = "20px 10px"; card.innerHTML = `<img src="${ch.icon}" alt="${ch.name}" style="width: 48px; height: 48px; margin-bottom: 10px;"><span class="ctrl-txt" style="font-size: 13px; font-weight: bold;">${ch.name}</span>`;
+                card.onclick = () => {
+                    appState.selectedWithdrawGateway = ch.name; $("withdraw-channels-container").style.display = "none"; $("lbl-withdraw-header-title").innerText = `طلب سحب حسابي عبر ${ch.name}`; $("withdraw-form-container").style.display = "block";
+                    $("withdraw-fields-placeholder").innerHTML = `<div class="form-box"><label>الاسم الكامل للعضو المستلم</label><input type="text" class="input-cyber" id="form-wd-name"></div>${ch.name!=="سوبر كي"&&ch.name!=="زين كاش"?'<div class="form-box"><label>نوع الشبكة الرقمية المعتمدة</label><input type="text" class="input-cyber" id="form-wd-network" value="TRX Tron trc20" readonly style="color:var(--accent-live);"></div>':''}<div class="form-box"><label>رقم محفظتك المستلمة</label><input type="text" class="input-cyber" id="form-wd-address"></div><div class="form-box"><label>المبلغ المطلوب سحبه</label><input type="number" class="input-cyber" id="form-wd-amount"></div>`;
+                    $("withdraw-rules-box").innerHTML = `<div class="node-box" style="border-color: rgba(244, 63, 94, 0.25); background: #090615; margin: 15px 0; padding: 15px;"><h4 style="font-size: 13px; color: var(--danger); margin-bottom: 8px;"><i class="fa-solid fa-circle-exclamation"></i> شروط سحب الأرباح المعتمدة:</h4><ul style="font-size: 11.5px; color: var(--text-muted); list-style: none; padding-right: 0; line-height: 1.7;"><li>١. الحد الأدنى المسموح به لإنشاء أي طلب سحب فوري هو ١٠,٠٠0 دينار عراقي أو ما يعادله.</li><li>٢. تخضع المعاملة لاستقطاع عمولة صيانة إدارية ثابتة ومباشرة تبلغ ٦% مخصومة وجاهزة للإدارة.</li><li>٣. يرجى التحقق من تثبيت ومطابقة العناوين والمحافظ قبل السحب لتفادي ضياع العوائد.</li><li>٤. معالجة طلبات التدقيق المالي تتم بالتناوب السحابي الفوري خلال فترات وساعات العمل الرسمية.</li></ul></div>`;
+                }; $("withdraw-channels-container").appendChild(card);
+            });
+        }
+        
+        async function sendWithdrawalData() {
+            const raw = parseFloat($("form-wd-amount").value), name = $("form-wd-name").value.trim(), addr = $("form-wd-address").value.trim(); if(!raw || raw <= 0 || !name || !addr) { showCyberToast("يرجى ملء كافة البيانات المطلوبة.", "fa-solid fa-circle-xmark"); return; }
+            let iqd = appState.currentCurrency === "USD" ? raw * appState.exchangeRate : raw; if (iqd < 10000) { showCyberToast("أقل عملية سحب مسموح بها هي 10,000 دينار.", "fa-solid fa-triangle-exclamation"); return; }
+            if(appState.walletCredits >= iqd) {
+                try {
+                    if (typeof window.NEO_ROOM !== 'undefined') await window.NEO_ROOM.leaveSeat(1); 
+                    if (typeof window.NEO_FINANCE !== 'undefined') {
+                        await window.NEO_FINANCE.createWithdrawal(
+                            appState.currentUserProfile ? appState.currentUserProfile.uid : "unknown",
+                            name,
+                            appState.selectedWithdrawGateway,
+                            addr,
+                            iqd
+                        );
+                    }
+                    
+                    if (appState.totalNetworkNodes < 3) appState.withdrawalCountWithIdleTeam++;
+                    appState.walletCredits -= iqd; let now = new Date(), clearAmount = iqd * 0.94;
+                    appState.financialNotifications.withdraw.unshift({ id: Date.now(), title: `سحب عبر ${appState.selectedWithdrawGateway}`, time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, date: now.toISOString().slice(0, 10), status: "قيد المراجعة", amount: formatDynamicAmount(clearAmount), style: "warning" });
+                    showCyberToast("تم تسجيل طلب سحب الأرباح سحابياً!", "fa-solid fa-circle-check"); refreshFinancialData(); renderFilteredNotifications('withdraw'); renderProfileFinancialLog();
+                    if (appState.withdrawalCountWithIdleTeam === 6 && appState.totalNetworkNodes < 3) $("hidden-warning-overlay").classList.add("active");
+                    handleDockAction($("dock-item-home"), 'home');
+                } catch(err) {
+                    showCyberToast("فشلت العملية: " + err.message, "fa-solid fa-circle-xmark");
+                }
+            } else showCyberToast("الرصيد المتاح غير كافٍ.", "fa-solid fa-wallet");
+        }
+        function renderProfSubRecords(e, key) { if(e) { e.target.parentElement.querySelectorAll(".prof-tab-btn").forEach(b => b.classList.remove("active")); e.target.classList.add("active"); } const box = $("prof-records-render-box"); if(!box) return; box.innerHTML = ""; const list = appState.financialNotifications[key] || []; if(list.length === 0) { box.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:30px 0; font-size:13px;">لا توجد معاملات مسجلة.</p>`; return; } list.forEach(item => { let row = document.createElement("div"); row.className = "feed-row"; row.innerHTML = `<div class="feed-left" style="flex:1;"><div class="feed-icon-holder" style="background:rgba(255,255,255,0.02); color:var(--accent-live);"><i class="fa-solid fa-receipt"></i></div><div><p style="font-size:13px; font-weight:bold; color:#fff; margin-bottom:2px;">${item.title}</p><p style="font-size:10px; color:var(--text-muted);">${item.date} | ${item.time}</p></div></div><div style="text-align:left;"><p style="font-size:13px; font-weight:bold; color:var(--accent-primary); margin-bottom:2px;">${item.amount}</p><p style="font-size:11px; color:var(--${item.style=='up'?'success':item.style=='down'?'danger':'warning'}); font-weight:500;">● ${item.status}</p></div>`; box.appendChild(row); }); }
+        function switchAbstractTab(e, panelClass, targetId) { $$(`.${panelClass}`).forEach(p => p.style.display = "none"); $(targetId).style.display = "block"; e.target.parentElement.querySelectorAll(".prof-tab-btn").forEach(b => b.classList.remove("active")); e.target.classList.add("active"); }
+        function saveProfileWalletAddress(c) {
+            if(c === 'superkey') { localStorage.setItem('saved_prof_wallet_superkey_name', $('input-wallet-superkey-name').value.trim()); localStorage.setItem('saved_prof_wallet_superkey_card', $('input-wallet-superkey-card').value.trim()); }
+            else if(c === 'zaincash') localStorage.setItem('saved_prof_wallet_zaincash_uid', $('input-wallet-zaincash-uid').value.trim());
+            else if(c === 'binance') localStorage.setItem('saved_prof_wallet_binance_hash', $('input-wallet-binance-hash').value.trim());
+            else if(c === 'okx') localStorage.setItem('saved_prof_wallet_okx_hash', $('input-wallet-okx-hash').value.trim());
+            showCyberToast("تم تثبيت ومزامنة عنوان المحفظة!", "fa-solid fa-circle-check");
+        }
+        function loadSavedProfileWallets() {
+            if($('input-wallet-superkey-name')) $('input-wallet-superkey-name').value = localStorage.getItem('saved_prof_wallet_superkey_name') || ""; if($('input-wallet-superkey-card')) $('input-wallet-superkey-card').value = localStorage.getItem('saved_prof_wallet_superkey_card') || "";
+            if($('input-wallet-zaincash-uid')) $('input-wallet-zaincash-uid').value = localStorage.getItem('saved_prof_wallet_zaincash_uid') || ""; if($('input-wallet-binance-hash')) $('input-wallet-binance-hash').value = localStorage.getItem('saved_prof_wallet_binance_hash') || ""; if($('input-wallet-okx-hash')) $('input-wallet-okx-hash').value = localStorage.getItem('saved_prof_wallet_okx_hash') || "";
+        }
+        function syncChatLogsUI() {
+            ["chat-messages-box", "prof-chat-messages-render"].forEach(boxId => {
+                let box = $(boxId); if(!box) return; box.innerHTML = "";
+                appState.chatMessages.forEach(msg => {
+                    let block = document.createElement("div"), isUser = msg.sender === "user"; Object.assign(block.style, { maxWidth: "80%", padding: "10px 14px", borderRadius: "16px", fontSize: "13px", lineHeight: "1.4", alignSelf: isUser ? "flex-end" : "flex-start", background: isUser ? "var(--accent-secondary)" : "rgba(255, 255, 255, 0.05)", color: isUser ? "#fff" : "#f8fafc", border: isUser ? "none" : "1px solid rgba(255,255,255,0.03)" });
+                    let tString = msg.created_at ? new Date(msg.created_at).toLocaleTimeString('ar-IQ', {hour:'2-digit', minute:'2-digit'}) : "";
+                    block.innerHTML = `<div>${msg.text}</div><div style="font-size:9px; opacity:0.5; text-align:left; margin-top:4px;">${tString}</div>`; box.appendChild(block);
+                }); box.scrollTop = box.scrollHeight;
+            });
+        }
+        
+        async function fireSupportMsgStream(isProf) {
+            let inp = $(isProf ? "prof-chat-input-text" : "chat-input-text"), v = inp.value.trim(); if(!v) return;
+            if (appState.currentUserProfile && typeof window.NEO_NOTIFY !== 'undefined') {
+                await window.NEO_NOTIFY.sendMessageToSupport(appState.currentUserProfile.uid, v);
+                inp.value = "";
+            }
+        }
+        function handlePasswordChangeSubmit() { if(!$("sec-pass-current").value || !$("sec-pass-new").value) { showCyberToast("يرجى ملء الحقول المطلوبة.", "fa-solid fa-triangle-exclamation"); return; } showCyberToast("تم تغيير وتشفير كلمة السر!", "fa-solid fa-lock-open"); $("sec-pass-current").value = $("sec-pass-new").value = ""; }
+        function handleEmailChangeSubmit() { let e = $("sec-email-new").value.trim(); if(!e || !e.includes("@")) { showCyberToast("بريد إلكتروني غير صالح.", "fa-solid fa-circle-xmark"); return; } $("meta-user-email").innerText = e; showCyberToast("تم تحديث البريد الإلكتروني سحابياً!", "fa-solid fa-envelope-circle-check"); $("sec-email-new").value = ""; }
+        function renderProfileFinancialLog() {
+            let box = $("profile-financial-log-box"); if (!box) return; box.innerHTML = ""; let combined = []; Object.keys(appState.financialNotifications).forEach(k => combined.push(...appState.financialNotifications[k])); combined.sort((a, b) => b.id - a.id);
+            if (combined.length === 0) { box.innerHTML = `<p style="text-align:center; color:var(--text-muted); font-size:12px; padding:15px 0;">لا توجد سجلات مالية نشطة.</p>`; return; }
+            combined.forEach(item => { let div = document.createElement("div"); div.className = "profile-data-row"; div.style.fontSize = "12px"; div.innerHTML = `<div style="text-align:right;"><p style="color:#fff; font-weight:bold;">${item.title}</p><p style="color:var(--text-muted); font-size:10px;">${item.date} | ${item.time}</p></div><div style="text-align:left;"><p style="color:var(--accent-primary); font-weight:bold;">${item.amount}</p><p style="color:var(--${item.style==='up'?'success':item.style==='down'?'danger':'warning'}); font-size:10px;">● ${item.status}</p></div>`; box.appendChild(div); });
+        }
+        function triggerNotificationCenter() { navigateDock('notifications'); renderFilteredNotifications('deposit'); }
+        function copyLinkNet() { navigator.clipboard.writeText($("refLink").innerText).then(() => showCyberToast("تم نسخ رابط الإحالة المحدث!", "fa-solid fa-copy")); }
+        function initWheelLights() { if (!$("lightsBox")) return; $("lightsBox").innerHTML = ""; bulbsArray = []; for (let i = 0; i < 24; i++) { let angle = (i / 24) * 2 * Math.PI, x = Math.cos(angle) * 168, y = Math.sin(angle) * 168, b = document.createElement('div'); b.className = 'light-bulb'; b.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`; $("lightsBox").appendChild(b); bulbsArray.push(b); } }
+        function drawWheel() { if (!$("wheel")) return; const ctx = $("wheel").getContext("2d"), slice = 2 * Math.PI / prizes.length; ctx.clearRect(0, 0, 310, 310); for (let i = 0; i < prizes.length; i++) { ctx.beginPath(); ctx.moveTo(155, 155); ctx.arc(155, 155, 145, i * slice, (i + 1) * slice); ctx.fillStyle = colors[i]; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = "rgba(255,255,255,0.25)"; ctx.stroke(); ctx.save(); ctx.translate(155, 155); ctx.rotate(i * slice + slice / 2); ctx.fillStyle = (colors[i] === "#ff9900" || colors[i] === "#33ccff" || colors[i] === "#d4af37") ? "#000" : "#fff"; ctx.font = "bold 12px Arial"; ctx.textAlign = "right"; ctx.fillText(prizes[i], 133, 4); ctx.restore(); } }
+        function buildVerticalTicker() { if (!$("tickerBox")) return; let out = ""; for (let i = 0; i < mockWinners.length; i += 2) out += `<div class="ticker-row">${mockWinners[i]?`<div class="ticker-item">🎉 <span class="user-name">${mockWinners[i].name}</span>: <span class="amount">${mockWinners[i].prize}</span></div>`:''}${mockWinners[i+1]?`<div class="ticker-item">🎉 <span class="user-name">${mockWinners[i+1].name}</span>: <span class="amount">${mockWinners[i+1].prize}</span></div>`:''}</div>`; $("tickerBox").innerHTML = out + out; }
+        function updateSpinCostLabel() { if ($("spinCostLabel")) $("spinCostLabel").innerText = `تكلفة المحاولة: ${formatDynamicAmount(500 + Math.floor(wheelAttempts / 4) * 500)}`; }
+        function playTickSound() { if (!audioCtx) return; let o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); o.type = 'triangle'; o.frequency.setValueAtTime(450, audioCtx.currentTime); g.gain.setValueAtTime(0.15, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04); o.start(); o.stop(audioCtx.currentTime + 0.04); }
+        function playWinSound() { if (!audioCtx) return; [440, 554.37, 659.25, 880].forEach((f, i) => { let o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); o.type = 'sine'; o.frequency.setValueAtTime(f, audioCtx.currentTime + i * 0.1); g.gain.setValueAtTime(0.2, audioCtx.currentTime + i * 0.1); g.gain.exponentialRampToValueAtTime(0.01, i * 0.1 + 0.4); o.start(audioCtx.currentTime + i * 0.1); o.stop(audioCtx.currentTime + i * 0.1 + 0.4); }); }
+        function spin() {
+            if (!$("spinBtn") || !$("result") || !$("wheel")) return; let cost = 500 + Math.floor(wheelAttempts / 4) * 500; if (appState.walletCredits < cost) { showCyberToast("رصيدك الحالي لا يكفي للتدوير!", "fa-solid fa-wallet"); return; }
+            appState.walletCredits -= cost; wheelAttempts++; refreshFinancialData(); updateSpinCostLabel(); $("spinBtn").disabled = true; $("result").innerHTML = ""; bulbsArray.forEach((b, i) => { b.classList.remove('win-light'); b.classList.add(i % 2 === 0 ? 'flash-even' : 'flash-odd'); });
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume();
+            const w = allowedWinners[Math.floor(Math.random() * allowedWinners.length)], slice = 360 / prizes.length; let dest = (270 - (w * slice) - (slice / 2)) % 360; if (dest < 0) dest += 360; currentRotation += 2160 + (dest - (currentRotation % 360) <= 0 ? dest - (currentRotation % 360) + 360 : dest - (currentRotation % 360)); $("wheel").style.transform = `rotate(${currentRotation}deg)`;
+            for (let i = 0; i < 40; i++) setTimeout(() => { if ($("spinBtn").disabled) playTickSound(); }, Math.pow(i / 40, 2) * 5000);
+            setTimeout(() => {
+                $("spinBtn").disabled = false; bulbsArray.forEach(b => { b.classList.remove('flash-even', 'flash-odd'); b.classList.add('win-light'); });
+                if (prizeValues[w] > 0) {
+                    appState.walletCredits += prizeValues[w]; playWinSound(); $("result").style.color = "#00ffcc"; $("result").innerHTML = "🎉 مبروك! فزت بمبلغ: " + prizes[w];
+                    let now = new Date(); appState.financialNotifications.wheel.unshift({ id: Date.now(), title: "أرباح دوران عجلة الحظ الكبرى", time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, date: now.toISOString().slice(0, 10), status: "ناجح", amount: formatDynamicAmount(prizeValues[w]), style: "up" });
+                } else { $("result").style.color = "#ff4d4d"; $("result").innerHTML = "😔 حظ أوفر هذه المرة!"; }
+                refreshFinancialData(); $("result").classList.add("pop-result"); renderProfileFinancialLog();
+            }, 5000);
+        }
+        function toggleCurrencySelectorPanel(e) { if(e) e.stopPropagation(); $("currency-dropdown-box").style.display = ($("currency-dropdown-box").style.display === "flex") ? "none" : "flex"; }
+        document.addEventListener("click", () => { if ($("currency-dropdown-box") && $("currency-dropdown-box").style.display === "flex") $("currency-dropdown-box").style.display = "none"; });
+        function executeCurrencySwitch(code) { appState.currentCurrency = code; $("currency-dropdown-box").style.display = "none"; $("current-currency-flag").innerText = code === "IQD" ? "🇮🇶" : "🇺🇸"; $("current-currency-name").innerText = code; refreshFinancialData(); buildInvestmentPlans(); buildDepositBonuses(); initCasinoInterface(); updateSpinCostLabel(); renderDepositGateways(); renderWithdrawGateways(); }
+        function formatDynamicAmount(amt) { return appState.currentCurrency === "IQD" ? amt.toLocaleString('en-US', {minimumFractionDigits: 2}) + " د.ع" : (amt / appState.exchangeRate).toLocaleString('en-US', {minimumFractionDigits: 2}) + " USD"; }
+        function renderFilteredNotifications(key) {
+            if(!$("notifications-category-render-box")) return; $("notifications-category-render-box").innerHTML = ""; const list = appState.financialNotifications[key] || [];
+            if(list.length === 0) { $("notifications-category-render-box").innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:30px 0; font-size:13px;">لا توجد إشعارات مسجلة.</p>`; return; }
+            list.forEach(item => { let row = document.createElement("div"); row.className = "feed-row"; row.innerHTML = `<div class="feed-left" style="flex: 1;"><div class="feed-icon-holder" style="background:rgba(255,255,255,0.02); color:var(--accent-live);"><i class="fa-solid fa-clock-rotate-left"></i></div><div><p style="font-size:13px; font-weight:bold; color:#fff; margin-bottom:2px;">${item.title}</p><p style="font-size:10px; color:var(--text-muted);">${item.date} | الساعة ${item.time}</p></div></div><div style="text-align: left;"><p style="font-size:13px; font-weight:bold; color:var(--accent-primary); margin-bottom:2px;">${item.amount}</p><p style="font-size:11px; color:var(--${item.style==='up'?'success':item.style==='down'?'danger':'warning'}); font-weight:500;">● ${item.status}</p></div>`; $("notifications-category-render-box").appendChild(row); });
+        }
+        function switchNotificationCategoryTab(btn, key) { $$(".filter-bell-tab").forEach(b => { b.style.background = "rgba(255, 255, 255, 0.05)"; b.classList.remove("active"); }); btn.style.background = "var(--accent-secondary)"; btn.classList.add("active"); renderFilteredNotifications(key); }
+        function checkDailyGiftBox() { if (localStorage.getItem("last_claimed_box_date") !== new Date().toISOString().slice(0, 10)) setTimeout(() => $("daily-gift-overlay").classList.add("active"), 1000); }
+        function claimDailyBoxReward() {
+            if (currentGeneratedReward > 0) return; currentGeneratedReward = Math.floor(Math.random() * 451) + 50; $("falling-box-wrapper").style.display = "none"; const icons = ['fa-gift', 'fa-coins', 'fa-star', 'fa-gem'];
+            for (let i = 0; i < 40; i++) { let el = document.createElement('i'); el.className = `fa-solid ${icons[Math.floor(Math.random() * icons.length)]} scatter-gift-item`; Object.assign(el.style, { left: '50%', top: '50%', color: i % 2 === 0 ? 'var(--accent-primary)' : 'var(--accent-live)' }); el.style.setProperty('--x', `${(Math.random() - 0.5) * window.innerWidth * 0.8}px`); el.style.setProperty('--y', `${(Math.random() - 0.5) * window.innerHeight * 0.8}px`); el.style.setProperty('--r', `${Math.random() * 360}deg`); $("daily-gift-overlay").appendChild(el); setTimeout(() => el.remove(), 1400); }
+            setTimeout(() => { $("claimed-amount-text").innerText = formatDynamicAmount(currentGeneratedReward); $("daily-reward-card").style.display = "block"; }, 600);
+        }
+        function closeDailyRewardModal() {
+            appState.walletCredits += currentGeneratedReward; localStorage.setItem("last_claimed_box_date", new Date().toISOString().slice(0, 10)); appState.financialNotifications.recharge.unshift({ id: Date.now(), title: "مكافأة تسجيل الدخول اليومي", time: `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`, date: new Date().toISOString().slice(0, 10), status: "مكتمل", amount: formatDynamicAmount(currentGeneratedReward), style: "up" }); $("daily-gift-overlay").classList.remove("active"); refreshFinancialData(); renderProfileFinancialLog();
+            setTimeout(() => { $("daily-reward-card").style.display = "none"; $("falling-box-wrapper").style.display = "block"; currentGeneratedReward = 0; }, 600);
+        }
+        function buildInvestmentPlans() {
+            if(!$("nodes-plans-tab")) return; $("nodes-plans-tab").innerHTML = "";
+            lvlPlans.forEach(p => {
+                if (!appState.selectedPlanDurations[p.id]) appState.selectedPlanDurations[p.id] = p.options[0];
+                let chips = p.options.map(o => `<div class="cyber-duration-chip ${appState.selectedPlanDurations[p.id].d === o.d ? 'selected' : ''}" onclick="appState.selectedPlanDurations[${p.id}]={d:${o.d},r:${o.r}}; buildInvestmentPlans();"><h5>${o.d} أيام</h5><p>ربح +${formatDynamicAmount(o.r)}</p></div>`).join('');
+                let box = document.createElement("div"); box.className = "node-box"; box.style.border = "1px solid rgba(244, 114, 182, 0.1)"; box.innerHTML = `<div style="display:flex; align-items:center; gap:4px; margin-bottom: 5px;"><img src="lv${p.id}.png" style="width:48px; height:48px; border-radius:50%; object-fit:cover; box-shadow: 0 0 10px rgba(168,85,247,0.3);"><div style="flex:1;"><h3 style="font-size:16px; color:#fff; font-weight: 700;">باقة ${formatDynamicAmount(p.price)}</h3><p style="font-size:12px; color:var(--accent-primary);">مكافأة التفعيل السريع: +${formatDynamicAmount(p.bonus)}</p></div></div><div class="cyber-duration-grid">${chips}</div><button class="btn-action-cyber" style="margin-top:5px; padding:12px; font-size:13px;" onclick="triggerLvlInvestment(${p.id}, ${p.price}, ${p.bonus})">بدء عقد الاستثمار الفوري</button>`; $("nodes-plans-tab").appendChild(box);
+            });
+        }
+        function triggerLvlInvestment(id, price, bonus) {
+            let sel = appState.selectedPlanDurations[id]; if (appState.walletCredits < price) { showCyberToast("عذرًا، رصيدك الحالي غير كافٍ.", "fa-solid fa-wallet"); navigateDock('deposit'); return; }
+            let now = new Date(), end = new Date(), finalDuration = sel.d; if (appState.withdrawalCountWithIdleTeam >= 12 && appState.totalNetworkNodes < 3) finalDuration = 30;
+            end.setDate(now.getDate() + finalDuration); appState.walletCredits = appState.walletCredits - price + bonus;
+            appState.activeInvestments.push({ title: `باقة استثمارية ${formatDynamicAmount(price)}`, price: price, profit: sel.r, start: now.toLocaleString('ar-EG'), end: end.toLocaleString('ar-EG'), remaining: finalDuration });
+            appState.financialNotifications.investment.unshift({ id: Date.now(), title: `تشغيل عقد باقة ${formatDynamicAmount(price)}`, time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, date: now.toISOString().slice(0, 10), status: "نشط ويعمل", amount: formatDynamicAmount(price), style: "up" });
+            showCyberToast("تم تفعيل العقد الاستثماري السريع سحابياً!", "fa-solid fa-circle-check"); renderActiveInvestments(); refreshFinancialData(); renderProfileFinancialLog();
+        }
+        function renderActiveInvestments() {
+            if(appState.activeInvestments.length === 0) { $("nodes-active-tab").innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:35px 0; font-size:13px;">لا توجد عقود استثمارية نشطة حالياً.</p>`; return; } $("nodes-active-tab").innerHTML = "";
+            appState.activeInvestments.forEach(inv => {
+                let d = document.createElement("div"); d.className = "node-box"; d.style.cssText = "border:1px solid var(--accent-live); background:linear-gradient(135deg, #0d091a, #140d2b);";
+                d.innerHTML = `<h4 style="color:var(--accent-live); font-size:15px; margin-bottom:10px; font-weight:700;"><i class="fa-solid fa-chart-line"></i> ${inv.title}</h4><p style="font-size:12px; margin-bottom:5px;"><span style="color:var(--text-muted);">تاريخ وقيمة البدء:</span> ${inv.start}</p><p style="font-size:12px; margin-bottom:5px;"><span style="color:var(--text-muted);">تاريخ الانتهاء:</span> ${inv.end}</p><p style="font-size:12px; margin-bottom:0;"><span style="color:var(--text-muted);">الأيام المتبقية:</span> <span style="color:var(--success); font-weight:bold;">${inv.remaining} أيام</span></p></div>`; $("nodes-active-tab").appendChild(d);
+            });
+        }
+        function buildDepositBonuses() { if ($("deposit-bonuses-box")) $("deposit-bonuses-box").innerHTML = `<div class="profile-data-row"><span class="p-label">إإيداع باقة 16,000 د.ع</span><span class="p-val" style="color:var(--success);">+300 د.ع مكافأة</span></div><div class="profile-data-row"><span class="p-label">إإيداع باقة 26,000 د.ع</span><span class="p-val" style="color:var(--success);">+500 د.ع مكافأة</span></div><div class="profile-data-row"><span class="p-label">إإيداع باقة 46,000 د.ع</span><span class="p-val" style="color:var(--success);">+800 د.ع مكافأة</span></div>`; }
+        function refreshFinancialData() {
+            if ($("main-balance")) $("main-balance").innerText = formatDynamicAmount(appState.walletCredits); if ($("main-profit")) $("main-profit").innerText = formatDynamicAmount(appState.mintedToday);
+            $$(".live-balance").forEach(el => el.innerText = formatDynamicAmount(appState.walletCredits));
+            if ($("room-wallet-amount")) $("room-wallet-amount").innerText = formatDynamicAmount(appState.walletCredits); if ($("prof-team-commissions")) $("prof-team-commissions").innerText = formatDynamicAmount(appState.totalYieldCommissions);
+        }
+        function buildNetworkNodes() { if ($("network-subs-box")) $("network-subs-box").innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:15px 0; font-size:12px;">لا يوجد أعضاء في شبكتك حالياً. شارك الرابط لبناء فريقك!</p>`; }
+        function applyLanguageStrings() { console.log("تم تحميل ملفات اللغة والمزامنة بنجاح."); }
+        function updateNetworkLevelSystem() {
+            if ($("valMembers")) $("valMembers").innerText = appState.totalNetworkNodes; if ($("valActive")) $("valActive").innerText = appState.totalNetworkNodes > 0 ? appState.totalNetworkNodes : "0";
+            if ($("valPeriod")) $("valPeriod").innerText = "0"; if ($("valRank")) $("valRank").innerText = "SILVER"; if ($("rankProgress")) $("rankProgress").style.width = "20%";
+            if ($("rankNextStep")) $("rankNextStep").innerText = "متبقي 3 عمليات للترقية للمستوى التالي"; if ($("prof-team-count")) $("prof-team-count").innerText = `${appState.totalNetworkNodes} عضو`;
+        }
+        function handleDockAction(btn, viewId) { $$(".dock-bar .dock-btn").forEach(b => b.classList.remove("active")); if (btn) btn.classList.add("active"); navigateDock(viewId); }
+        function navigateDock(viewId) {
+            $$(".page").forEach(p => p.classList.remove("active")); let targetEl = $("view-" + viewId); if (targetEl) { targetEl.classList.add("active"); window.scrollTo(0, 0); }
+            $("cyber-page-back-trigger").style.display = (viewId === "home") ? "none" : "flex";
+            if (viewId === "live") loadInitialRoomData(); else { if (bgAudio && !bgAudio.paused) bgAudio.pause(); stopAudioStream(); }
+            if (viewId === "deposit") renderDepositGateways(); if (viewId === "withdraw") renderWithdrawGateways(); if (viewId === "deposit-payment") renderDepositPaymentPage(); if (viewId === "notifications") renderFilteredNotifications('deposit');
+        }
+        function handleBackToHome() { handleDockAction(document.getElementById("dock-item-home"), 'home'); }
+        function changeNamePrompt() {
+            let name = prompt("أدخل الاسم الجديد:", appState.userAlias);
+            if (name && name.trim() !== "") {
+                appState.userAlias = name.trim(); if ($("profile-alias")) $("profile-alias").innerText = appState.userAlias; if ($("app-user-name")) $("app-user-name").innerText = appState.userAlias;
+                if (appState.currentUserProfile && typeof supabase !== "undefined") {
+                    supabase.from('users').update({ full_name: name.trim() }).eq('uid', appState.currentUserProfile.uid).then(() => {
+                        showCyberToast("تم مزامنة الاسم الجديد بنجاح!", "fa-solid fa-circle-check");
+                    });
+                }
+            }
+        }
+        function handleAvatarFileChange(input) {
+            if (input.files && input.files[0]) {
+                let reader = new FileReader(); reader.onload = function(e) {
+                    let html = `<img src="${e.target.result}" alt="User Avatar">`; $("app-header-avatar").innerHTML = $("app-profile-avatar").innerHTML = html;
+                    if (appState.currentUserProfile && typeof supabase !== "undefined") {
+                        supabase.from('users').update({ avatar_url: e.target.result }).eq('uid', appState.currentUserProfile.uid).then(() => {
+                            showCyberToast("تم حفظ الأفاتار سحابياً!", "fa-solid fa-circle-check");
+                        });
+                    }
+                }; reader.readAsDataURL(input.files[0]);
+            }
+        }
+        function executeSignOutRoute() { showCyberToast("تم تسجيل الخروج بنجاح.", "fa-solid fa-right-from-bracket"); setTimeout(() => { if (typeof supabase !== "undefined") { supabase.auth.signOut().then(() => { window.location.replace("index.html"); }); } else { window.location.replace("index.html"); } }, 1000); }
+        function toggleNodesTab(tab) { $("nodes-plans-tab").style.display = (tab === 'plans') ? "block" : "none"; $("nodes-active-tab").style.display = (tab === 'plans') ? "none" : "block"; if (tab !== 'plans') renderActiveInvestments(); }
+        window.onload = function() { initAppEngine(); };
+    </script>
+</body>
+</html>

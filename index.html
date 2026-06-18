@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>NEO - Portal</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-main: #040207;
+            --bg-card: #0f0a1c;
+            --bg-header: rgba(6, 3, 13, 0.9);
+            --accent-primary: #f472b6; /* وردي نيون */
+            --accent-secondary: #a855f7; /* أرجواني كهربائي */
+            --accent-live: #00f2fe; /* أزرق سيان */
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --success: #10b981;
+            --danger: #f43f5e;
+            --glow-primary: rgba(244, 114, 182, 0.25);
+            --glow-live: rgba(0, 242, 254, 0.35);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* حصر الحركات التفاعلية لمنع الـ Lag وتسريع الأداء على الهواتف */
+        body, input, textarea, .btn-cyber-primary, .input-cyber, .custom-select-trigger, 
+        .password-toggle, .gender-option, .neo-modal-sheet, .neo-modal-list-item, 
+        .modal-grid-item, .lang-translate-btn, .slider-img {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background: var(--bg-main);
+            color: var(--text-main);
+            max-width: 430px;
+            margin: auto;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            box-shadow: 0 0 50px rgba(168, 85, 247, 0.2);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            overscroll-behavior-y: contain;
+        }
+
+        input, textarea {
+            user-select: text;
+        }
+
+        /* شاشة الإنترو التمهيدية */
+        #intro-screen {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 430px;
+            height: 100vh;
+            background: var(--bg-main);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+        }
+
+        .intro-logo-svg {
+            width: 100px;
+            height: 100px;
+            animation: svgPulse 2s infinite alternate;
+        }
+
+        .intro-logo-svg path {
+            stroke: var(--accent-live);
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 500;
+            stroke-dashoffset: 500;
+            animation: drawStroke 4s ease forwards;
+        }
+
+        @keyframes drawStroke {
+            to { stroke-dashoffset: 0; fill: rgba(168, 85, 247, 0.1); }
+        }
+
+        @keyframes svgPulse {
+            0% { filter: drop-shadow(0 0 5px var(--accent-live)); }
+            100% { filter: drop-shadow(0 0 25px var(--accent-primary)); }
+        }
+
+        .intro-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 20px;
+            letter-spacing: 2px;
+            background: linear-gradient(to left, #fff, var(--accent-primary), var(--accent-live));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .intro-progress-container {
+            width: 80%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-top: 40px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .intro-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-secondary), var(--accent-live));
+            box-shadow: 0 0 10px var(--accent-live);
+            animation: loadProgress 3.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes loadProgress {
+            0% { width: 0%; }
+            50% { width: 60%; }
+            100% { width: 100%; }
+        }
+
+        /* حاويات الواجهات الأساسية */
+        .auth-container {
+            width: 100%;
+            min-height: calc(100vh - 40px);
+            background: var(--bg-card);
+            border-radius: 24px;
+            border: 1px solid rgba(168, 85, 247, 0.15);
+            padding: 24px 20px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .auth-container::before {
+            content: ''; position: absolute; top: -60px; left: -60px; width: 150px; height: 150px;
+            background: var(--accent-primary); filter: blur(60px); opacity: 0.15; pointer-events: none;
+        }
+
+        .auth-page {
+            display: none;
+            width: 100%;
+        }
+        
+        .auth-page.active {
+            display: block;
+            animation: cubicSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cubicSlide {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* أزرار وعناصر التحكم العليا */
+        .lang-translate-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 100;
+        }
+        
+        .lang-translate-btn:hover {
+            border-color: var(--accent-live);
+            box-shadow: 0 0 10px var(--glow-live);
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            margin-top: 16px;
+        }
+        
+        .brand-logo-inline {
+            width: 42px;
+            height: 42px;
+            filter: drop-shadow(0 0 8px var(--glow-primary));
+            animation: spinPulse 4s linear infinite;
+        }
+        
+        @keyframes spinPulse {
+            0% { transform: rotate(0deg); filter: drop-shadow(0 0 5px var(--accent-live)); }
+            50% { filter: drop-shadow(0 0 15px var(--accent-primary)); }
+            100% { transform: rotate(360deg); filter: drop-shadow(0 0 5px var(--accent-live)); }
+        }
+        
+        .brand-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(to left, #fff, var(--accent-live));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* شريط البنر المتغير */
+        .image-slider-banner {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(4, 2, 7, 0.9);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+        }
+        
+        .slider-img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            z-index: 1;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .slider-img.active {
+            opacity: 1;
+            z-index: 2;
+        }
+
+        /* مجموعات الإدخال والنماذج */
+        .form-group {
+            margin-bottom: 16px;
+            position: relative;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        
+        .section-gap {
+            margin-top: 24px;
+        }
+
+        .input-cyber-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .input-cyber-wrapper i.field-icon {
+            position: absolute;
+            left: 16px;
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+        
+        .input-cyber {
+            width: 100%;
+            height: 56px;
+            padding: 0 16px 0 48px;
+            background: rgba(4, 2, 7, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            text-align: left;
+        }
+        
+        .input-cyber:focus {
+            border-color: var(--accent-live);
+            box-shadow: 0 0 12px var(--glow-live);
+        }
+
+        .custom-select-trigger {
+            width: 100%;
+            height: 56px;
+            padding: 0 16px;
+            background: rgba(4, 2, 7, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            color: white;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        
+        .custom-select-trigger:hover {
+            border-color: var(--accent-secondary);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 16px;
+            z-index: 10;
+        }
+        
+        .password-toggle:hover { color: var(--text-main); }
+
+        .flex-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            font-size: 13px;
+            width: 100%;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+        
+        .checkbox-container input {
+            accent-color: var(--accent-primary);
+            width: 16px;
+            height: 16px;
+        }
+        
+        .forget-link {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        /* الأزرار الأساسية */
+        .btn-cyber-primary {
+            width: 100%;
+            height: 56px;
+            border: none;
+            border-radius: 18px;
+            background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary));
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px var(--glow-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-cyber-primary:active { transform: scale(0.97); }
+
+        .btn-cyber-primary:disabled {
+            background: var(--text-muted);
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .switch-auth-mode {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        
+        .switch-auth-mode span {
+            color: var(--accent-live);
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* الصورة الشخصية */
+        .avatar-upload-box {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .avatar-preview-wrapper {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            margin: auto;
+            padding: 3px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-live));
+            box-shadow: 0 0 15px var(--glow-primary);
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .avatar-preview-inside {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--bg-main);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .avatar-preview-inside img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        
+        .avatar-preview-inside i {
+            font-size: 28px;
+            color: var(--text-muted);
+        }
+        
+        .avatar-upload-box input[type="file"] {
+            display: none;
+        }
+        
+        .upload-badge {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(50%);
+            background: var(--accent-secondary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        /* محدد الجنس */
+        .gender-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .gender-option {
+            background: rgba(4, 2, 7, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 14px;
+            border-radius: 16px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: var(--text-muted);
+        }
+        
+        .gender-option.selected {
+            border-color: var(--accent-primary);
+            color: white;
+            background: rgba(244, 114, 182, 0.1);
+            box-shadow: 0 0 10px var(--glow-primary);
+        }
+
+        /* قوة كلمة المرور */
+        .password-strength-container {
+            margin-top: 6px;
+        }
+        
+        .strength-bar-meta {
+            height: 4px;
+            background: #1e1b4b;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+        
+        .strength-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--danger);
+        }
+        
+        .password-rules {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 10px;
+            padding-left: 4px;
+        }
+        
+        .password-rules div {
+            text-align: left;
+        }
+        
+        .rule-item { display: flex; align-items: center; gap: 4px; justify-content: flex-start; }
+        .rule-item.valid { color: var(--success); }
+        .rule-item.valid i { color: var(--success); }
+
+        /* نظام الإشعارات Toast */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 390px;
+            z-index: 10000000;
+            pointer-events: none;
+        }
+        
+        .toast-notification {
+            background: rgba(15, 10, 28, 0.95);
+            border: 1px solid var(--accent-live);
+            box-shadow: 0 5px 20px var(--glow-live);
+            padding: 14px 16px;
+            border-radius: 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInDown 0.3s ease forwards;
+        }
+        
+        .toast-notification.error {
+            border-color: var(--danger);
+            box-shadow: 0 5px 20px rgba(244, 63, 94, 0.25);
+        }
+        
+        .toast-notification.success {
+            border-color: var(--success);
+            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.25);
+        }
+
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* عنصر التحميل الدوار */
+        .spinner {
+            animation: rotate 1s linear infinite;
+            width: 18px;
+            height: 18px;
+            display: none;
+        }
+        
+        .spinner circle {
+            stroke: #ffffff;
+            stroke-linecap: round;
+            animation: dash 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+        @keyframes dash {
+            0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
+            50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
+            100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; }
+        }
+
+        .country-phone-wrapper {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 8px;
+        }
+
+        /* نظام الـ Modals */
+        .neo-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 430px;
+            height: 100vh;
+            background: rgba(4, 2, 7, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 100000;
+            display: none;
+            align-items: flex-end;
+        }
+        
+        .neo-modal-overlay.active {
+            display: flex;
+        }
+        
+        .neo-modal-sheet {
+            width: 100%;
+            background: var(--bg-card);
+            border-top: 2px solid rgba(168, 85, 247, 0.3);
+            border-radius: 24px 24px 0 0;
+            padding: 24px 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .neo-modal-overlay.active .neo-modal-sheet {
+            transform: translateY(0);
+        }
+        
+        .neo-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 12px;
+        }
+        
+        .neo-modal-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent-live);
+        }
+        
+        .neo-modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .neo-modal-list-item {
+            padding: 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.02);
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-direction: row;
+        }
+        
+        .neo-modal-list-item:hover {
+            background: rgba(168, 85, 247, 0.1);
+            border-color: var(--accent-primary);
+        }
+        
+        .modal-grid-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        
+        .modal-grid-item {
+            background: rgba(4, 2, 7, 0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .modal-grid-item:hover {
+            border-color: var(--accent-live);
+            background: rgba(0, 242, 254, 0.1);
+        }
+
+        .app-version-footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        /* قواعد التبديل الجغرافي RTL */
+        html[dir="rtl"] .input-cyber-wrapper i.field-icon { left: auto; right: 16px; }
+        html[dir="rtl"] .input-cyber { padding: 0 48px 0 16px; text-align: right; }
+        html[dir="rtl"] .password-toggle { right: auto; left: 16px; }
+        html[dir="rtl"] .form-group { text-align: right; }
+        html[dir="rtl"] .form-group label { text-align: right; }
+        html[dir="rtl"] .checkbox-container { text-align: right; direction: rtl; }
+        html[dir="rtl"] .lang-translate-btn { right: auto; left: 20px; }
+        html[dir="rtl"] .rule-item { justify-content: flex-start; }
+        html[dir="rtl"] .password-rules div { text-align: right; }
+        html[dir="rtl"] .neo-modal-header h3 { text-align: right; }
+        html[dir="rtl"] .neo-modal-list-item { flex-direction: row-reverse; }
+        html[dir="rtl"] .neo-modal-dob-meta-text { text-align: right; }
+    </style>
+
+    <script src="sup.js"></script>
+</head>
+<body>
+
+    <div id="intro-screen">
+        <svg class="intro-logo-svg" viewBox="0 0 100 100">
+            <path d="M 25,75 L 25,25 L 75,75 L 75,25" />
+        </svg>
+        <div class="intro-title">NEO</div>
+        <div class="intro-progress-container">
+            <div class="intro-progress-bar"></div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-wrapper"></div>
+
+    <div class="auth-container">
+        
+        <button class="lang-translate-btn" onclick="togglePlatformLanguage()"><i class="fa-solid fa-language"></i> EN/AR</button>
+
+        <div class="brand-header">
+            <svg class="brand-logo-inline" viewBox="0 0 100 100">
+                <path d="M 30,70 L 30,30 L 70,70 L 70,30" fill="none" stroke="url(#neoGlowGrad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs>
+                    <linearGradient id="neoGlowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="var(--accent-secondary)" />
+                        <stop offset="100%" stop-color="var(--accent-primary)" />
+                    </linearGradient>
+                </defs>
+            </svg>
+            <h1>NEO</h1>
+        </div>
+
+        <div id="panel-login" class="auth-page active">
+            <div class="image-slider-banner">
+                <img src="j1.png" class="slider-img active" alt="Slide 1">
+                <img src="j2.png" class="slider-img" alt="Slide 2">
+                <img src="j3.png" class="slider-img" alt="Slide 3">
+                <img src="j4.png" class="slider-img" alt="Slide 4">
+                <img src="j5.png" class="slider-img" alt="Slide 5">
+            </div>
+
+            <form id="form-login-action" onsubmit="executeUserLogin(event)">
+                <div class="form-group">
+                    <label data-i18n="loginIdLabel">Email or Phone Number</label>
+                    <div class="input-cyber-wrapper">
+                        <i class="fa-solid fa-user field-icon"></i>
+                        <input type="text" class="input-cyber" id="login-identifier" placeholder="Enter your email or phone..." data-i18n-placeholder="loginIdPlaceholder" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="loginPassLabel">Password</label>
+                    <div class="input-cyber-wrapper">
+                        <i class="fa-solid fa-lock field-icon"></i>
+                        <input type="password" class="input-cyber" id="login-pass" placeholder="••••••••" required>
+                        <i class="fa-solid fa-eye password-toggle" onclick="togglePasswordVisibility('login-pass', this)"></i>
+                    </div>
+                </div>
+
+                <div class="flex-actions">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="login-remember" checked>
+                        <span data-i18n="loginRemember">Remember me</span>
+                    </label>
+                    <a href="#" class="forget-link" onclick="triggerMockForgot(event)" data-i18n="loginForgot">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="btn-cyber-primary" id="btn-login-submit">
+                    <svg class="spinner" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle></svg>
+                    <span class="btn-text" data-i18n="loginBtn">Login</span>
+                </button>
+            </form>
+
+            <div class="switch-auth-mode">
+                <span data-i18n="noAccount">Don't have an account? </span><span onclick="switchAuthView('register')" data-i18n="createNewAcc">Create New Account</span>
+            </div>
+        </div>
+
+        <div id="panel-register" class="auth-page">
+            <form id="form-register-action" onsubmit="executeUserRegistration(event)">
+                <div class="avatar-upload-box">
+                    <div class="avatar-preview-wrapper" onclick="document.getElementById('file-avatar-input').click()">
+                        <div class="avatar-preview-inside" id="avatar-preview-container">
+                            <i class="fa-solid fa-camera"></i>
+                            <img id="avatar-img-element" alt="Avatar">
+                        </div>
+                        <div class="upload-badge" data-i18n="uploadBadge">Upload</div>
+                    </div>
+                    <input type="file" id="file-avatar-input" accept="image/*" onchange="processAvatarUpload(this)">
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div class="form-group">
+                        <label data-i18n="firstNameLabel">First Name</label>
+                        <div class="input-cyber-wrapper">
+                            <input type="text" class="input-cyber" id="reg-firstname" style="padding-left:16px;" placeholder="First name" data-i18n-placeholder="firstNamePlaceholder" oninput="compileFullName()" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="lastNameLabel">Last Name</label>
+                        <div class="input-cyber-wrapper">
+                            <input type="text" class="input-cyber" id="reg-lastname" style="padding-left:16px;" placeholder="Last name" data-i18n-placeholder="lastNamePlaceholder" oninput="compileFullName()" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="fullNameLabel">Full Name</label>
+                    <div class="input-cyber-wrapper">
+                        <i class="fa-solid fa-id-card field-icon"></i>
+                        <input type="text" class="input-cyber" id="reg-fullname" placeholder="Full name" data-i18n-placeholder="fullNamePlaceholder" readonly>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="genderLabel">Gender</label>
+                    <div class="gender-selector">
+                        <div class="gender-option selected" id="g-male" onclick="setGenderIdentity('Male')">
+                            <i class="fa-solid fa-mars"></i> <span data-i18n="male">Male</span>
+                        </div>
+                        <div class="gender-option" id="g-female" onclick="setGenderIdentity('Female')">
+                            <i class="fa-solid fa-venus"></i> <span data-i18n="female">Female</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="dobLabel">Date of Birth (Min 18 Years)</label>
+                    <div class="custom-select-trigger" onclick="openNeoModal('modal-dob')">
+                        <span id="trigger-dob-text" data-i18n="dobTrigger">Select your date of birth...</span>
+                        <i class="fa-solid fa-calendar-days" style="color:var(--accent-primary)"></i>
+                    </div>
+                </div>
+
+                <div class="form-group section-gap">
+                    <label data-i18n="countryLabel">Country</label>
+                    <div class="custom-select-trigger" onclick="openNeoModal('modal-country')">
+                        <span id="trigger-country-text" data-i18n="countryTrigger">Select Country...</span>
+                        <i class="fa-solid fa-earth-americas" style="color:var(--accent-live)"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="phoneLabel">Phone Number</label>
+                    <div class="country-phone-wrapper">
+                        <div class="input-cyber-wrapper">
+                            <input type="text" class="input-cyber" id="reg-phone-prefix" style="padding-left:12px; text-align:center;" readonly placeholder="+">
+                        </div>
+                        <div class="input-cyber-wrapper">
+                            <i class="fa-solid fa-phone field-icon"></i>
+                            <input type="tel" class="input-cyber" id="reg-phone-num" placeholder="5XXXXXXXX" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="emailLabel">Email Address</label>
+                    <div class="input-cyber-wrapper">
+                        <i class="fa-solid fa-envelope field-icon"></i>
+                        <input type="email" class="input-cyber" id="reg-email" placeholder="name@example.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label id="label-ref-code" data-i18n="refLabel">Referral Code</label>
+                    <div class="input-cyber-wrapper">
+                        <i class="fa-solid fa-share-nodes field-icon"></i>
+                        <input type="text" class="input-cyber" id="reg-ref-code" placeholder="Enter referral code..." data-i18n-placeholder="refPlaceholder">
+                    </div>
+                </div>
+
+                <div class="form-group section-gap">
+                    <label data-i18n="passLabel">Password</label>
+                    <div class="input-cyber-wrapper">
+                        <i class="fa-solid fa-key field-icon"></i>
+                        <input type="password" class="input-cyber" id="reg-pass" placeholder="••••••••" oninput="evaluatePasswordStrength(this.value)" required>
+                        <i class="fa-solid fa-eye password-toggle" onclick="togglePasswordVisibility('reg-pass', this)"></i>
+                    </div>
+                    <div class="password-strength-container">
+                        <div class="strength-bar-meta"><div class="strength-bar-fill" id="pass-strength-meter"></div></div>
+                        <div class="password-rules">
+                            <div class="rule-item" id="r-len"><i class="fa-solid fa-circle-xmark"></i> <span data-i18n="ruleLen">8 Chars</span></div>
+                            <div class="rule-item" id="r-up"><i class="fa-solid fa-circle-xmark"></i> <span data-i18n="ruleUp">Uppercase</span></div>
+                            <div class="rule-item" id="r-low"><i class="fa-solid fa-circle-xmark"></i> <span data-i18n="ruleLow">Lowercase</span></div>
+                            <div class="rule-item" id="r-num"><i class="fa-solid fa-circle-xmark"></i> <span data-i18n="ruleNum">Number</span></div>
+                            <div class="rule-item" id="r-spec"><i class="fa-solid fa-circle-xmark"></i> <span data-i18n="ruleSpec">Special Char</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="passConfirmLabel">Confirm Password</label>
+                    <div class="input-cyber-wrapper">
+                        <i class="fa-solid fa-shield field-icon"></i>
+                        <input type="password" class="input-cyber" id="reg-pass-confirm" placeholder="••••••••" required>
+                        <i class="fa-solid fa-eye password-toggle" onclick="togglePasswordVisibility('reg-pass-confirm', this)"></i>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top:20px;">
+                    <label class="checkbox-container" style="align-items: flex-start;">
+                        <input type="checkbox" id="reg-terms-check" style="margin-top: 2px;" required>
+                        <span style="font-size:12px; line-height:1.4; text-align: left;" data-i18n="termsText">I agree to the Terms, Conditions, and Privacy Policy of NEO.</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-cyber-primary" id="btn-register-submit" style="margin-top:20px;">
+                    <svg class="spinner" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle></svg>
+                    <span class="btn-text" data-i18n="registerBtn">Sign Up</span>
+                </button>
+            </form>
+
+            <div class="switch-auth-mode">
+                <span data-i18n="haveAccount">Already have an account? </span><span onclick="switchAuthView('login')" data-i18n="instantLogin">Login Now</span>
+            </div>
+        </div>
+
+        <div class="app-version-footer" data-i18n="versionText">v0.8.9 (2026-01-24)</div>
+
+    </div>
+
+    <div id="modal-country" class="neo-modal-overlay" onclick="closeNeoModal(this)">
+        <div class="neo-modal-sheet" onclick="event.stopPropagation()">
+            <div class="neo-modal-header">
+                <h3 data-i18n="modalCountryTitle">Select Country</h3>
+                <button class="neo-modal-close" onclick="closeNeoModal(document.getElementById('modal-country'))">×</button>
+            </div>
+            <div id="modal-country-list-container"></div>
+        </div>
+    </div>
+
+    <div id="modal-dob" class="neo-modal-overlay" onclick="closeNeoModal(this)">
+        <div class="neo-modal-sheet" onclick="event.stopPropagation()">
+            <div class="neo-modal-header">
+                <h3 data-i18n="modalDobTitle">Select Date of Birth</h3>
+                <button class="neo-modal-close" onclick="closeNeoModal(document.getElementById('modal-dob'))">×</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:16px; text-align: left;">
+                <p class="neo-modal-dob-meta-text" style="font-size:12px; color:var(--text-muted)" data-i18n="yearLabel">Year:</p>
+                <div class="modal-grid-options" id="modal-dob-years" style="max-height:120px; overflow-y:auto;"></div>
+                
+                <p class="neo-modal-dob-meta-text" style="font-size:12px; color:var(--text-muted)" data-i18n="monthLabel">Month:</p>
+                <div class="modal-grid-options" id="modal-dob-months"></div>
+                
+                <p class="neo-modal-dob-meta-text" style="font-size:12px; color:var(--text-muted)" data-i18n="dayLabel">Day:</p>
+                <div class="modal-grid-options" id="modal-dob-days" style="max-height:120px; overflow-y:auto;"></div>
+                
+                <button class="btn-cyber-primary" style="height:46px; margin-top:12px;" onclick="confirmCustomDob()" data-i18n="confirmDobBtn">Confirm & Insert Date</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // منع فتح الكونسول للحماية الأولية للأجهزة الهاتفيّة
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.onkeydown = function (e) {
+            if (e.keyCode == 123) return false;
+            if (e.ctrlKey && e.shiftKey && ['I', 'C', 'J'].includes(String.fromCharCode(e.keyCode))) return false;
+            if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+        };
+
+        const globalCountries = [
+            { name: "Iraq", code: "IQ", prefix: "+964", flag: "🇮🇶" },
+            { name: "Saudi Arabia", code: "SA", prefix: "+966", flag: "🇸🇦" },
+            { name: "United Arab Emirates", code: "AE", prefix: "+971", flag: "🇦🇪" },
+            { name: "Egypt", code: "EG", prefix: "+20", flag: "🇪🇬" },
+            { name: "Jordan", code: "JO", prefix: "+962", flag: "🇯🇴" },
+            { name: "Kuwait", code: "KW", prefix: "+965", flag: "🇰🇼" },
+            { name: "Qatar", code: "QA", prefix: "+974", flag: "🇶🇦" },
+            { name: "Bahrain", code: "BH", prefix: "+973", flag: "🇧🇭" },
+            { name: "Oman", code: "OM", prefix: "+968", flag: "🇴🇲" },
+            { name: "Yemen", code: "YE", prefix: "+967", flag: "🇾🇪" },
+            { name: "Lebanon", code: "LB", prefix: "+961", flag: "🇱🇧" },
+            { name: "Syria", code: "SY", prefix: "+963", flag: "🇸🇾" },
+            { name: "Palestine", code: "PS", prefix: "+970", flag: "🇵🇸" },
+            { name: "Morocco", code: "MA", prefix: "+212", flag: "🇲🇦" },
+            { name: "Algeria", code: "DZ", prefix: "+213", flag: "🇩🇿" },
+            { name: "Tunisia", code: "TN", prefix: "+216", flag: "🇹🇳" },
+            { name: "Libya", code: "LY", prefix: "+218", flag: "🇱🇾" },
+            { name: "Sudan", code: "SD", prefix: "+249", flag: "🇸🇩" },
+            { name: "Mauritania", code: "MR", prefix: "+222", flag: "🇲🇷" },
+            { name: "Djibouti", code: "DJ", prefix: "+253", flag: "🇩🇯" },
+            { name: "Somalia", code: "SO", prefix: "+252", flag: "🇸🇴" },
+            { name: "Comoros", code: "KM", prefix: "+269", flag: "🇰🇲" },
+            { name: "United States", code: "US", prefix: "+1", flag: "🇺🇸" },
+            { name: "United Kingdom", code: "GB", prefix: "+44", flag: "🇬🇧" },
+            { name: "Canada", code: "CA", prefix: "+1", flag: "🇨🇦" },
+            { name: "Australia", code: "AU", prefix: "+61", flag: "🇦🇺" },
+            { name: "Germany", code: "DE", prefix: "+49", flag: "🇩🇪" },
+            { name: "France", code: "FR", prefix: "+33", flag: "🇫🇷" },
+            { name: "Italy", code: "IT", prefix: "+39", flag: "🇮🇹" },
+            { name: "Spain", code: "ES", prefix: "+34", flag: "🇪🇸" },
+            { name: "Turkey", code: "TR", prefix: "+90", flag: "🇹🇷" },
+            { name: "Russia", code: "RU", prefix: "+7", flag: "🇷🇺" },
+            { name: "China", code: "CN", prefix: "+86", flag: "🇨🇳" },
+            { name: "Japan", code: "JP", prefix: "+81", flag: "🇯🇵" },
+            { name: "India", code: "IN", prefix: "+91", flag: "🇮🇳" },
+            { name: "Brazil", code: "BR", prefix: "+55", flag: "🇧🇷" },
+            { name: "Argentina", code: "AR", prefix: "+54", flag: "🇦🇷" },
+            { name: "Mexico", code: "MX", prefix: "+52", flag: "🇲🇽" },
+            { name: "South Africa", code: "ZA", prefix: "+27", flag: "🇿🇦" },
+            { name: "South Korea", code: "KR", prefix: "+82", flag: "🇰🇷" },
+            { name: "Netherlands", code: "NL", prefix: "+31", flag: "🇳🇱" },
+            { name: "Sweden", code: "SE", prefix: "+46", flag: "🇸🇪" },
+            { name: "Switzerland", code: "CH", prefix: "+41", flag: "🇨🇭" },
+            { name: "Belgium", code: "BE", prefix: "+32", flag: "🇧🇪" },
+            { name: "Greece", code: "GR", prefix: "+30", flag: "🇬🇷" },
+            { name: "Poland", code: "PL", prefix: "+48", flag: "🇵🇱" },
+            { name: "Austria", code: "AT", prefix: "+43", flag: "🇦🇹" },
+            { name: "Norway", code: "NO", prefix: "+47", flag: "🇳🇴" },
+            { name: "Ireland", code: "IE", prefix: "+353", flag: "🇮🇪" },
+            { name: "Malaysia", code: "MY", prefix: "+60", flag: "🇲🇾" }
+        ];
+
+        let registeredAvatarBase64 = "";
+        let selectedGender = "Male";
+        let tempSelectedYear = 2000;
+        let tempSelectedMonth = 1;
+        let tempSelectedDay = 1;
+        let finalSelectedCountryIndex = 0;
+        let currentLang = 'en';
+
+        const translations = {
+            en: {
+                loginIdLabel: "Email or Phone Number", loginIdPlaceholder: "Enter your email or phone...", loginPassLabel: "Password",
+                loginRemember: "Remember me", loginForgot: "Forgot Password?", loginBtn: "Login", noAccount: "Don't have an account? ",
+                createNewAcc: "Create New Account", uploadBadge: "Upload", firstNameLabel: "First Name", firstNamePlaceholder: "First name",
+                lastNameLabel: "Last Name", lastNamePlaceholder: "Last name", fullNameLabel: "Full Name", fullNamePlaceholder: "Full name",
+                genderLabel: "Gender", male: "Male", female: "Female", dobLabel: "Date of Birth (Min 18 Years)", dobTrigger: "Select your date of birth...",
+                countryLabel: "Country", countryTrigger: "Select Country...", phoneLabel: "Phone Number", emailLabel: "Email Address",
+                refLabel: "Referral Code", refPlaceholder: "Enter referral code...", passLabel: "Password", passConfirmLabel: "Confirm Password",
+                termsText: "I agree to the Terms, Conditions, and Privacy Policy of NEO.", registerBtn: "Sign Up", haveAccount: "Already have an account? ",
+                instantLogin: "Login Now", versionText: "v0.8.9 (2026-01-24)", modalCountryTitle: "Select Country", modalDobTitle: "Select Date of Birth",
+                yearLabel: "Year:", monthLabel: "Month:", dayLabel: "Day:", confirmDobBtn: "Confirm & Insert Date",
+                ruleLen: "8 Chars", ruleUp: "Uppercase", ruleLow: "Lowercase", ruleNum: "Number", ruleSpec: "Special Char"
+            },
+            ar: {
+                loginIdLabel: "البريد الإلكتروني أو رقم الهاتف", loginIdPlaceholder: "أدخل البريد أو الهاتف...", loginPassLabel: "كلمة المرور",
+                loginRemember: "تذكرني", loginForgot: "نسيت كلمة المرور؟", loginBtn: "تسجيل الدخول", noAccount: "ليس لديك حساب؟ ",
+                createNewAcc: "إنشاء حساب جديد", uploadBadge: "رفع الصورة", firstNameLabel: "الاسم الأول", firstNamePlaceholder: "الاسم الأول",
+                lastNameLabel: "اسم العائلة", lastNamePlaceholder: "اسم العائلة", fullNameLabel: "الاسم الكامل", fullNamePlaceholder: "الاسم الكامل...",
+                genderLabel: "الجنس", male: "ذكر", female: "أنثى", dobLabel: "تاريخ الميلاد (الحد الأدنى 18 سنة)", dobTrigger: "حدد تاريخ ميلادك...",
+                countryLabel: "الدولة", countryTrigger: "اختر الدولة...", phoneLabel: "رقم الهاتف", emailLabel: "البريد الإلكتروني",
+                refLabel: "كود الإحالة", refPlaceholder: "أدخل كود الإحالة الاختياري...", passLabel: "كلمة المرور", passConfirmLabel: "تأكيد كلمة المرور",
+                termsText: "أوافق على الشروط والأحكام وسياسة الخصوصية لشبكة NEO.", registerBtn: "إنشاء حساب", haveAccount: "لديك حساب بالفعل؟ ",
+                instantLogin: "سجل دخولك الآن", versionText: "v0.8.9 (2026-01-24)", modalCountryTitle: "اختر الدولة", modalDobTitle: "حدد تاريخ الميلاد",
+                yearLabel: "السنة:", monthLabel: "الشهر:", dayLabel: "اليوم:", confirmDobBtn: "تأكيد وإدراج التاريخ",
+                ruleLen: "8 رموز", ruleUp: "حرف كبير", ruleLow: "حرف صغير", ruleNum: "رقم", ruleSpec: "رمز خاص"
+            }
+        };
+
+        window.addEventListener("DOMContentLoaded", () => {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
+            }
+            setTimeout(() => {
+                const intro = document.getElementById("intro-screen");
+                if (intro) {
+                    intro.style.opacity = "0";
+                    setTimeout(() => intro.style.display = "none", 600);
+                }
+            }, 2000);
+
+            initPremiumImageSlider();
+            checkReferralUrlParameter();
+            buildCustomCountryModal();
+            buildCustomDobModalOptions();
+            selectCountryFromModal(0);
+        });
+
+        function togglePlatformLanguage() {
+            currentLang = currentLang === 'en' ? 'ar' : 'en';
+            document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+            document.documentElement.lang = currentLang;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[currentLang][key]) el.innerText = translations[currentLang][key];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (translations[currentLang][key]) el.placeholder = translations[currentLang][key];
+            });
+        }
+
+        function initPremiumImageSlider() {
+            const images = document.querySelectorAll(".image-slider-banner .slider-img");
+            let currentIndex = 0;
+            if(images.length > 0) {
+                setInterval(() => {
+                    images[currentIndex].classList.remove("active");
+                    currentIndex = (currentIndex + 1) % images.length;
+                    images[currentIndex].classList.add("active");
+                }, 5000);
+            }
+        }
+
+        function checkReferralUrlParameter() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const refCode = urlParams.get('ref');
+            if (refCode) document.getElementById("reg-ref-code").value = refCode;
+        }
+
+        function buildCustomCountryModal() {
+            const container = document.getElementById("modal-country-list-container");
+            container.innerHTML = "";
+            globalCountries.forEach((c, idx) => {
+                const div = document.createElement("div");
+                div.className = "neo-modal-list-item";
+                div.onclick = () => selectCountryFromModal(idx);
+                div.innerHTML = `<span>${c.flag} ${c.name}</span><span style="color:var(--accent-live);">${c.prefix}</span>`;
+                container.appendChild(div);
+            });
+        }
+
+        function selectCountryFromModal(idx) {
+            finalSelectedCountryIndex = idx;
+            const country = globalCountries[idx];
+            document.getElementById("trigger-country-text").innerText = `${country.flag} ${country.name}`;
+            document.getElementById("reg-phone-prefix").value = country.prefix;
+            closeNeoModal(document.getElementById('modal-country'));
+        }
+
+        function buildCustomDobModalOptions() {
+            const yearsContainer = document.getElementById("modal-dob-years");
+            const monthsContainer = document.getElementById("modal-dob-months");
+            const currentYear = new Date().getFullYear();
+
+            yearsContainer.innerHTML = "";
+            monthsContainer.innerHTML = "";
+
+            for(let i = currentYear - 18; i >= currentYear - 80; i--) {
+                const item = document.createElement("div"); item.className = "modal-grid-item"; item.innerText = i;
+                item.onclick = () => { tempSelectedYear = i; highlightSelectedGridItem("modal-dob-years", item); updateDobDaysDynamic(); };
+                yearsContainer.appendChild(item);
+            }
+            for(let i = 1; i <= 12; i++) {
+                const item = document.createElement("div"); item.className = "modal-grid-item"; item.innerText = i;
+                item.onclick = () => { tempSelectedMonth = i; highlightSelectedGridItem("modal-dob-months", item); updateDobDaysDynamic(); };
+                monthsContainer.appendChild(item);
+            }
+            updateDobDaysDynamic();
+        }
+
+        /* توليد الأيام بشكل ديناميكي مبني على هندسة الشهر والسنة لمنع التواريخ غير المنطقية */
+        function updateDobDaysDynamic() {
+            const daysContainer = document.getElementById("modal-dob-days");
+            daysContainer.innerHTML = "";
+            const totalDays = new Date(tempSelectedYear, tempSelectedMonth, 0).getDate();
+
+            for(let i = 1; i <= totalDays; i++) {
+                const item = document.createElement("div"); item.className = "modal-grid-item"; item.innerText = i;
+                if(i === tempSelectedDay) {
+                    item.style.borderColor = "var(--accent-primary)"; item.style.background = "rgba(244, 114, 182, 0.15)";
+                }
+                item.onclick = () => { tempSelectedDay = i; highlightSelectedGridItem("modal-dob-days", item); };
+                daysContainer.appendChild(item);
+            }
+            if (tempSelectedDay > totalDays) { tempSelectedDay = totalDays; }
+        }
+
+        function highlightSelectedGridItem(containerId, target) {
+            document.getElementById(containerId).querySelectorAll(".modal-grid-item").forEach(el => {
+                el.style.borderColor = "rgba(255,255,255,0.05)"; el.style.background = "rgba(4, 2, 7, 0.5)";
+            });
+            target.style.borderColor = "var(--accent-primary)"; target.style.background = "rgba(244, 114, 182, 0.15)";
+        }
+
+        function confirmCustomDob() {
+            const pad = (n) => n.toString().padStart(2, '0');
+            document.getElementById("trigger-dob-text").innerText = `${tempSelectedYear} / ${pad(tempSelectedMonth)} / ${pad(tempSelectedDay)}`;
+            closeNeoModal(document.getElementById('modal-dob'));
+        }
+
+        function openNeoModal(id) { document.getElementById(id).classList.add("active"); }
+        function closeNeoModal(el) { if(el) el.classList.remove("active"); }
+        
+        function togglePasswordVisibility(id, btn) {
+            const input = document.getElementById(id);
+            input.type = input.type === "password" ? "text" : "password";
+            btn.className = `fa-solid fa-eye${input.type === 'password' ? '' : '-slash'} password-toggle`;
+        }
+        function switchAuthView(view) {
+            document.querySelectorAll(".auth-page").forEach(p => p.classList.remove("active"));
+            document.getElementById(`panel-${view}`).classList.add("active");
+        }
+        function setGenderIdentity(g) {
+            selectedGender = g;
+            document.getElementById("g-male").classList.remove("selected");
+            document.getElementById("g-female").classList.remove("selected");
+            document.getElementById(`g-${g.toLowerCase()}`).classList.add("selected");
+        }
+        function compileFullName() {
+            const fn = document.getElementById("reg-firstname").value.trim();
+            const ln = document.getElementById("reg-lastname").value.trim();
+            document.getElementById("reg-fullname").value = fn + (fn && ln ? " " : "") + ln;
+        }
+        function processAvatarUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById("avatar-img-element").src = e.target.result;
+                    document.getElementById("avatar-img-element").style.display = "block";
+                    registeredAvatarBase64 = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function evaluatePasswordStrength(pass) {
+            let checks = {
+                len: pass.length >= 8, up: /[A-Z]/.test(pass), low: /[a-z]/.test(pass),
+                num: /[0-9]/.test(pass), spec: /[!@#$%^&*(),.?":{}|<>]/.test(pass)
+            };
+            let score = 0;
+            for(let key in checks) {
+                const el = document.getElementById(`r-${key}`);
+                if(checks[key]) {
+                    el.classList.add("valid"); el.querySelector("i").className = "fa-solid fa-circle-check"; score++;
+                } else {
+                    el.classList.remove("valid"); el.querySelector("i").className = "fa-solid fa-circle-xmark";
+                }
+            }
+            document.getElementById("pass-strength-meter").style.width = `${(score / 5) * 100}%`;
+            return score === 5;
+        }
+
+        function executeUserRegistration(e) {
+            e.preventDefault();
+            
+            if (typeof supabase === "undefined" || !supabase) { 
+                showToast(currentLang === 'ar' ? "السيرفر غير متصل حالياً" : "Server is currently disconnected", true); 
+                return; 
+            }
+
+            const email = document.getElementById("reg-email").value.trim();
+            const pass = document.getElementById("reg-pass").value;
+            const passConf = document.getElementById("reg-pass-confirm").value;
+            const phoneNum = document.getElementById("reg-phone-num").value.trim();
+            const fullName = document.getElementById("reg-fullname").value.trim();
+
+            if (!evaluatePasswordStrength(pass)) {
+                showToast(currentLang === 'ar' ? "الرجاء استيفاء كافة شروط قوة كلمة المرور!" : "Please satisfy all password requirements!", true);
+                return;
+            }
+
+            if (pass !== passConf) { showToast(currentLang === 'ar' ? "كلمتا المرور غير متطابقتين" : "Passwords do not match", true); return; }
+
+            setLoadingState("btn-register-submit", true);
+
+            supabase.auth.signUp({
+                email: email,
+                password: pass
+            })
+            .then(({ data, error }) => {
+                if (error) {
+                    showToast(error.message, true);
+                    setLoadingState("btn-register-submit", false);
+                    return;
+                }
+                
+                const user = data.user;
+                const countryObj = globalCountries[finalSelectedCountryIndex];
+                const pad = (n) => n.toString().padStart(2, '0');
+
+                /* حماية الخادم: تم استبعاد إرسال حقول walletCredits و mintedToday لمنع الحقن العميل */
+                const userPayload = {
+                    uid: user.id,
+                    full_name: fullName,
+                    gender: selectedGender,
+                    birth_date: `${tempSelectedYear}-${pad(tempSelectedMonth)}-${pad(tempSelectedDay)}`,
+                    country: countryObj.name,
+                    phone: countryObj.prefix + phoneNum,
+                    email: email,
+                    avatar_url: registeredAvatarBase64 || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200",
+                    account_status: "ACTIVE",
+                    created_at: new Date().toISOString()
+                };
+
+                supabase.from('users').insert([userPayload]).then(({ error: dbError }) => {
+                    if (dbError) {
+                        showToast(dbError.message, true);
+                        setLoadingState("btn-register-submit", false);
+                    } else {
+                        localStorage.setItem("neo_nexus_user_session", JSON.stringify(userPayload));
+                        showToast(currentLang === 'ar' ? "تم إنشاء الحساب بنجاح!" : "Account created successfully!", false);
+                        setTimeout(() => window.location.href = "dashboard.html", 1000);
+                    }
+                });
+            })
+            .catch((error) => {
+                showToast(error.message, true);
+                setLoadingState("btn-register-submit", false);
+            });
+        }
+
+        function executeUserLogin(e) {
+            e.preventDefault();
+            if (typeof supabase === "undefined" || !supabase) {
+                showToast(currentLang === 'ar' ? "السيرفر غير متصل حالياً" : "Server is currently disconnected", true);
+                return;
+            }
+
+            const identifier = document.getElementById("login-identifier").value.trim();
+            const pass = document.getElementById("login-pass").value;
+
+            setLoadingState("btn-login-submit", true);
+
+            if (identifier.includes("@")) {
+                performSupabaseLogin(identifier, pass);
+            } else {
+                /* إصلاح هندسي: تصفية الرموز والبحث عالي التوافق في قاعدة البيانات باستخدام علاقة النهاية المرنة لمنع أخطاء البادئات الدولية */
+                let cleanPhone = identifier.replace(/[\s-]/g, '');
+                let query = supabase.from('users').select('email');
+
+                if (cleanPhone.startsWith("+")) {
+                    query = query.eq('phone', cleanPhone);
+                } else {
+                    query = query.like('phone', `%${cleanPhone}`);
+                }
+                
+                query.maybeSingle()
+                .then(({ data, error }) => {
+                    if (error) {
+                        showToast(error.message, true);
+                        setLoadingState("btn-login-submit", false);
+                        return;
+                    }
+                    if (data && data.email) {
+                        performSupabaseLogin(data.email, pass);
+                    } else {
+                        showToast(currentLang === 'ar' ? "رقم الهاتف غير مسجل لدينا، تأكد من الصيغة." : "Phone number not found.", true);
+                        setLoadingState("btn-login-submit", false);
+                    }
+                }).catch((error) => {
+                    showToast(error.message, true);
+                    setLoadingState("btn-login-submit", false);
+                });
+            }
+        }
+
+        function performSupabaseLogin(email, password) {
+            supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            })
+            .then(({ data, error }) => {
+                if (error) {
+                    showToast(currentLang === 'ar' ? "خطأ في كلمة المرور أو الحساب" : error.message, true);
+                    setLoadingState("btn-login-submit", false);
+                    return;
+                }
+                
+                supabase.from('users').select('*').eq('uid', data.user.id).maybeSingle().then(({ data: profile, error: dbError }) => {
+                    if (dbError) {
+                        showToast(dbError.message, true);
+                        setLoadingState("btn-login-submit", false);
+                    } else if (profile) {
+                        localStorage.setItem("neo_nexus_user_session", JSON.stringify(profile));
+                        showToast(currentLang === 'ar' ? "تم تسجيل الدخول بنجاح" : "Login successful", false);
+                        setTimeout(() => window.location.href = "dashboard.html", 1000);
+                    } else {
+                        showToast(currentLang === 'ar' ? "لم يتم العثور على بيانات العضو في قاعدة البيانات" : "User data not found in database", true);
+                        setLoadingState("btn-login-submit", false);
+                    }
+                });
+            })
+            .catch((error) => {
+                showToast(error.message, true);
+                setLoadingState("btn-login-submit", false);
+            });
+        }
+
+        function setLoadingState(id, isLoading) {
+            const btn = document.getElementById(id);
+            if(btn) {
+                btn.disabled = isLoading;
+                btn.querySelector(".spinner").style.display = isLoading ? "inline-block" : "none";
+                btn.querySelector(".btn-text").style.opacity = isLoading ? "0.5" : "1";
+            }
+        }
+
+        function showToast(msg, isError = false) {
+            const wrapper = document.getElementById("toast-wrapper");
+            const toast = document.createElement("div");
+            toast.className = `toast-notification ${isError ? 'error' : 'success'}`;
+            toast.innerHTML = `<i class="fa-solid fa-${isError?'triangle-exclamation':'circle-check'}"></i><span style="font-size:12px;">${msg}</span>`;
+            wrapper.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => wrapper.removeChild(toast), 300); }, 3500);
+        }
+
+        function triggerMockForgot(e) {
+            e.preventDefault();
+            showToast(currentLang === 'ar' ? "تم إرسال رابط استعادة الباسورد للإيميل المعتمد." : "Reset link sent.", false);
+        }
+    </script>
+</body>
+</html>
