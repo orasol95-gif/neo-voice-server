@@ -1,7 +1,7 @@
 {
   "name": "neo-server",
   "version": "1.0.0",
-  "description": "",
+  "description": "NEO Voice Server for Hugging Face",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.6",
-    "dotenv": "^16.4.5",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "livekit-server-sdk": "^2.15.4"
   }
